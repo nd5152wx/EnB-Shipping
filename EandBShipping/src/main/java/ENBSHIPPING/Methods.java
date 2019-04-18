@@ -5,7 +5,9 @@
  */
 package ENBSHIPPING;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.Block;
+import com.mongodb.DBCursor;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.client.FindIterable;
@@ -19,13 +21,23 @@ import static com.mongodb.client.model.Filters.in;
 import static com.mongodb.client.model.Projections.excludeId;
 import static com.mongodb.client.model.Projections.fields;
 import static com.mongodb.client.model.Projections.include;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
 import static java.lang.System.console;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
+import static jdk.nashorn.tools.ShellFunctions.input;
 import org.bson.Document;
 
 /**
@@ -42,6 +54,8 @@ public class Methods {
     private static int recipientZipcode = 0; //used to determine shipping costs
     private String login = "";
     private String password = "";
+    // radius of the Earth in miles
+    public static final double EARTH_RADIUS = 3949.99;
 
     static Scanner console = new Scanner(System.in);
 
@@ -177,10 +191,82 @@ public class Methods {
 
     }//end shipNewPackage
 
-    public double calculateShippingCost(String senderZipcode, String recipientZipcode, double weight) {
-        return weight * 2.00;
+    public double calculateShippingCost(int senderZipCode, int recipientZipCode, double weight) throws FileNotFoundException, IOException {
+
+        //find lat and long of a zip code
+       
+        long senderLatitude = 0;
+        long receiverLatitude = 0;
+        long senderLongitude = 0;
+        long receiverLongitude = 0;
+        //this probably needs to live outside of this method
+        //It searches for a  zip code in the file and returns the corresponding lat and long
+        Scanner input = new Scanner(new File("zipCode-Lat-Long.txt"));
+        senderLatitude = findLatitude(senderZipCode, input);
+        receiverLatitude = findLatitude(recipientZipCode, input);
+        senderLongitude = findLongitude(senderZipCode, input);
+        receiverLongitude = findLongitude(recipientZipCode, input);
+        
+        long distance = EARTH_RADIUS * arcos(sin(senderLatitude) * sin(receiverLatitude) +
+       cos(senderLatitude) * cos(receiverLatitude) *
+       cos(senderLongitude - receiverLongitude));
+    
+    return 0; 
     }
 
+    
+    
+        // Searches for the given zip code in the input file and returns associated latitude
+    public static long findLatitude(int targetZip, Scanner input) {
+       long latit = 0;
+        while (input.hasNextInt()) {
+            int zip = input.nextInt();
+            if (zip == targetZip) {
+                
+                //********Don't know how to do this part******************
+                // this part needs to pull out the line of the matching zip code
+                //and put the 2nd number into an array of type long
+                 //the file is zipcode, latitude, longitude
+                //otherwise pull it out as a string and we can parse it later
+                long[] latitude = line.split(",")
+                
+;
+
+                //pull out the lat and return it
+                 latit = latitude[1];
+      
+                return latit;
+            }//end if
+        }//end while 
+      
+        return 0;
+    }
+
+     // Searches for the given zip code in the input file and returns associated longitude 
+    public static long findLongitude(int targetZip, Scanner input) {
+        long longit = 0; 
+        while (input.hasNextInt()) {
+            int zip = input.nextInt();
+            if (zip == targetZip) {
+                // if the target zip code is found, it puts the lat and long into an array
+                long[] longitude = line.split(",");
+
+                //pull out the long and return it
+               longit = longitude[2];
+             
+                return longit;
+            }//end if
+        }//end while 
+        System.out.println("Zip code not found.");
+        return 0;
+    }
+    
+    
+    
+    
+    
+    
+    
     //add a new employee
     public void addNewEmployee() throws InvalidKeySpecException {
 
@@ -240,7 +326,7 @@ public class Methods {
         //insert the document into the database
         collectionEE.insertOne(doc);
 
-    //   Document myDoc = (Document) collectionEE.find(eq("login",login));
+        //   Document myDoc = (Document) collectionEE.find(eq("login",login));
         //    System.out.println(myDoc.toJson());
     }//end addNewEmployee
 
@@ -301,32 +387,23 @@ public class Methods {
             cursor.close();
         }
 
-        
-        
         try (MongoCursor<Document> cur = collectionEE.find().iterator()) {
-     while (cur.hasNext()) {
+            while (cur.hasNext()) {
 
-        Document doc = cur.next();
-        
-        List list = new ArrayList(doc.values());
-        System.out.print(list.get(1));
-        System.out.print(": ");
-        System.out.println(list.get(2));
-    }
-}
-    
-        
-      
-     
+                Document doc = cur.next();
 
-     
+                List list = new ArrayList(doc.values());
+                System.out.print(list.get(1));
+                System.out.print(": ");
+                System.out.println(list.get(2));
+            }
+        }
+
         //this skips the first 3 items and only prints the next 7
         //This will skip confidential information
         FindIterable it = collectionEE.find().skip(3).limit(7);
-        
+
      //   it.forEach((Block<Document>) System.out::println);
-  
-        
     }
 
     //track a package by its tracking number (id #)
@@ -425,18 +502,36 @@ public class Methods {
         }
     }//end has method
 
-    public byte[] getSalt(String login) throws Exception {
-        byte[] salt = new byte[32];
-        Class.forName("com.mysql.jdbc.Driver");
+    /*
+     public byte[] getSalt(String login) throws Exception {
+     byte[] salt = new byte[32];
+       
 
-        String sql = "SELECT salt FROM TicketAgent WHERE login = ?";
+     //need to get the salt from Employee where the login matches
+     BasicDBObject searchQuery = new BasicDBObject();
+     searchQuery.put("login", login);
+     DBCursor cursor = collectionEE.find(searchQuery);
+ 
+     while (cursor.hasNext()) {
+     System.out.println(cursor.next());
+     return salt;
+     }// end getSalt()
+     return salt; 
+     }
 
-        //	ResultSet set = pst.executeQuery();
-        //	while (set.next()) {
-        //		salt = set.getBytes(1);
-        //	}
-        return salt;
-    }// end getSalt()
+     */
+    // Returns Spherical distance in miles given the latitude 
+    // and longitude of two points (depends on constant RADIUS)
+    public static double distance(double lat1, double long1, double lat2, double long2) {
+        lat1 = Math.toRadians(lat1);
+        long1 = Math.toRadians(long1);
+        lat2 = Math.toRadians(lat2);
+        long2 = Math.toRadians(long2);
+        double theCos = Math.sin(lat1) * Math.sin(lat2)
+                + Math.cos(lat1) * Math.cos(lat2) * Math.cos(long1 - long2);
+        double arcLength = Math.acos(theCos);
+        return arcLength * RADIUS;
+    }
 
     /*
 

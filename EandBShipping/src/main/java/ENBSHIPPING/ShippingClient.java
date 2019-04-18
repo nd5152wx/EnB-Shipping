@@ -35,8 +35,13 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
 /**
- * Authors: Jason Richter/Joe Denzer Date: 7-May-2019 Course: CS485 Database
- * Systems Design Instructor: John Bartucz Program: Client Program Description:
+ * Authors: Jason Richter/Joe Denzer 
+ * Date: 7-May-2019 
+ * Course: CS485 Database
+ * Systems Design 
+ * Instructor: John Bartucz 
+ * Program: Client Program 
+ * Description:
  * Package Description:
  */
 public class ShippingClient {
@@ -62,7 +67,9 @@ public class ShippingClient {
         //  MongoClientURI connectionString = new MongoClientURI("mongodb://localhost:27017");
         //  MongoClient mongoClient = new MongoClient("mongodb+srv://Jason:Pa33W7L@cluster0-68epl.mongodb.net/test?retryWrites=true");
         //use driver 3.4.3. Paste in connection string in quotes
-        MongoClientURI uri = new MongoClientURI("mongodb://Joe:Parker1966@cluster0-shard-00-00-68epl.mongodb.net:27017,cluster0-shard-00-01-68epl.mongodb.net:27017,cluster0-shard-00-02-68epl.mongodb.net:27017/test?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin&retryWrites=true");
+        MongoClientURI uri = new MongoClientURI("mongodb://Joe:Parker1966@cluster0-shard-00-00-68epl.mongodb.net:27017,"
+                + "cluster0-shard-00-01-68epl.mongodb.net:27017,cluster0-shard-00-02-68epl.mongodb.net:27017/test?ssl="
+                + "true&replicaSet=Cluster0-shard-0&authSource=admin&retryWrites=true");
         MongoClient mongoClient = new MongoClient(uri);
 
         //access a database
@@ -71,23 +78,7 @@ public class ShippingClient {
         //access a collection
         MongoCollection<Document> collection = database.getCollection("Package");
 
-        /*
-        
-        //create a document
-        Document doc = new Document("name", "MongoDB")
-                .append("type", "database")
-                .append("count", 1)
-                .append("versions", Arrays.asList("v3.2", "v3.0", "v2.6"))
-                .append("info", new Document("x", 203).append("y", 102));
-*/
-        //insert one doc
-      // collection.insertOne(doc);
-
-        //update a document
-   //     collection.updateOne(eq("i", 10), new Document("$set", new Document("i", 110)));
-
-        //delete one doc
-    //    collection.deleteOne(eq("i", 110));
+       
 
         // Beginning of case/switch blocks
        Scanner console = new Scanner(System.in);
@@ -309,16 +300,29 @@ public class ShippingClient {
                 + " 0 - Exit\n\n Please enter a command:\n");
     }//end showUserMenu
 
-    // MongoClient mongoClient = new MongoClient();
-    //for local host
-    //  MongoClient mongoClient = new MongoClient( "localhost" , 27017 );
-    //    MongoCollection<Document> collection = database.getCollection("Users");
     
-
-
-    
-
+    //*********BELOW IS STUFF FOR REFERENCE*********************
     /*
+     
+        
+        //create a document
+        Document doc = new Document("name", "MongoDB")
+                .append("type", "database")
+                .append("count", 1)
+                .append("versions", Arrays.asList("v3.2", "v3.0", "v2.6"))
+                .append("info", new Document("x", 203).append("y", 102));
+
+        //insert one doc
+      // collection.insertOne(doc);
+
+        //update a document
+   //     collection.updateOne(eq("i", 10), new Document("$set", new Document("i", 110)));
+
+        //delete one doc
+    //    collection.deleteOne(eq("i", 110));
+    
+    
+    
      private static boolean login() throws Exception {
 
      Scanner console = new Scanner(System.in);
