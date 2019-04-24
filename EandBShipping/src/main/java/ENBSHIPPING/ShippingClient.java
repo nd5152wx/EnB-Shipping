@@ -29,7 +29,7 @@ import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.InputMismatchException;
-import java.util.List;
+import java.util.*;
 import java.util.Scanner;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
@@ -152,20 +152,13 @@ public class ShippingClient {
                                 break;
 
                             case 6://save for future use
-                                  System.out.println("This selection is saved for future use.");
+                                    System.out.println("Add zipcodes");
+                               Methods.addZipCodes(); 
                                 
                             case 7:// Update employee information
                               EB.updateEmployeeInformation();
                                 break;
-                                
-                            case 8://show all employees
-                                  EB.displayAllEmployees(); 
-                                break;
-         
-                            case 9:
-                                
-                                break;
-                      
+                            
                             case 0:// case 0 of Admin
                                 System.out.println("Thank you for using the E & B Shipping Co.");
                                 tempFlag = false;
@@ -291,7 +284,7 @@ public class ShippingClient {
     private static void showAdminMenu() {
         System.out.print("\n\n" + "1 - Calculate Shipping Cost\n" + "2 - Ship New Package\n"
                 + "3 - Track Package by Tracking Number\n" + "4 - Add New Employee\n" + "5 - Remove Employee\n"
-                + "6 - Add Admin\n" + "7 - Update Employee Information \n" + "8 - Display All Employees\n"
+                + "6 - Add Zip Codes\n" + "7 - Update Employee Information \n" 
                 + "0 - Exit\n\n" + "Please enter a command: \n");
     }// end showAdminMenu
 

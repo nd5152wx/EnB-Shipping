@@ -8,6 +8,7 @@ package ENBSHIPPING;
 import com.mongodb.BasicDBObject;
 import com.mongodb.Block;
 import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.client.FindIterable;
@@ -21,14 +22,15 @@ import static com.mongodb.client.model.Filters.in;
 import static com.mongodb.client.model.Projections.excludeId;
 import static com.mongodb.client.model.Projections.fields;
 import static com.mongodb.client.model.Projections.include;
-import java.io.BufferedReader;
-import java.io.File;
+
+import java.io.*;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+
+
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
 import static java.lang.System.console;
+import static java.rmi.server.ObjID.read;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
@@ -37,8 +39,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
+import javax.swing.JFileChooser;
 import static jdk.nashorn.tools.ShellFunctions.input;
 import org.bson.Document;
+
 
 /**
  *
@@ -59,11 +63,18 @@ public class Methods {
 
     static Scanner console = new Scanner(System.in);
 
+    
+    
     //use driver 3.4.3. Paste in connection string in quotes
     MongoClientURI uri = new MongoClientURI("mongodb://Joe:Parker1966@cluster0-shard-"
             + "00-00-68epl.mongodb.net:27017,cluster0-shard-00-01-68epl.mongodb.net:27017,"
             + "cluster0-shard-00-02-68epl.mongodb.net:27017/test?ssl=true&replicaSet="
             + "Cluster0-shard-0&authSource=admin&retryWrites=true");
+    
+   
+    
+  //  MongoClientURI uri = new MongoClientURI("");
+    
     MongoClient mongoClient = new MongoClient(uri);
 
     //access a database
@@ -72,6 +83,9 @@ public class Methods {
     //access a collection
     MongoCollection<Document> collectionEE = database.getCollection("Employee");
 
+    //access a collection
+    MongoCollection<Document> collectionZipCode = database.getCollection("ZipCode");
+    
     //access a collection
     MongoCollection<Document> collectionPackage = database.getCollection("Package");
 
@@ -159,7 +173,7 @@ public class Methods {
         currentLocation = senderCity;
 
         //call method to calculate shipping cost
-        shippingCost = calculateShippingCost(senderZipCode, recipientZipCode, weight);
+  //      shippingCost = calculateShippingCost(senderZipCode, recipientZipCode, weight);
         System.out.println("The package will cost " + shippingCost + " to ship.");
 
         //insert new package into the database
@@ -190,6 +204,8 @@ public class Methods {
         //print out the shipping label
 
     }//end shipNewPackage
+    
+  
 
     public double calculateShippingCost(int senderZipCode, int recipientZipCode, double weight) throws FileNotFoundException, IOException {
 
@@ -199,74 +215,69 @@ public class Methods {
         long receiverLatitude = 0;
         long senderLongitude = 0;
         long receiverLongitude = 0;
-        //this probably needs to live outside of this method
-        //It searches for a  zip code in the file and returns the corresponding lat and long
-        Scanner input = new Scanner(new File("zipCode-Lat-Long.txt"));
-        senderLatitude = findLatitude(senderZipCode, input);
-        receiverLatitude = findLatitude(recipientZipCode, input);
-        senderLongitude = findLongitude(senderZipCode, input);
-        receiverLongitude = findLongitude(recipientZipCode, input);
-        
-        long distance = EARTH_RADIUS * arcos(sin(senderLatitude) * sin(receiverLatitude) +
-       cos(senderLatitude) * cos(receiverLatitude) *
-       cos(senderLongitude - receiverLongitude));
+      
+    //    Scanner input = new Scanner(new File("zipCode-Lat-Long.txt"));
+
     
     return 0; 
     }
-
     
+    @SuppressWarnings("empty-statement")
+      public static void addZipCodes() throws FileNotFoundException, IOException{
+           //access a collection
     
-        // Searches for the given zip code in the input file and returns associated latitude
-    public static long findLatitude(int targetZip, Scanner input) {
-       long latit = 0;
-        while (input.hasNextInt()) {
-            int zip = input.nextInt();
-            if (zip == targetZip) {
-                
-                //********Don't know how to do this part******************
-                // this part needs to pull out the line of the matching zip code
-                //and put the 2nd number into an array of type long
-                 //the file is zipcode, latitude, longitude
-                //otherwise pull it out as a string and we can parse it later
-                long[] latitude = line.split(",")
-                
-;
+          String inputFileName;
+          
+          while(true){
+              JFileChooser open = new JFileChooser("./");
+              int status = open.showOpenDialog(null);
+              if(status == JFileChooser.APPROVE_OPTION){
+                  inputFileName = open.getSelectedFile().getAbsolutePath();
+                  break;
+              }
+          }//end while
+          try{
+          //remove headers
+          Scanner inFile = new Scanner(new FileReader(inputFileName));
+          inFile.useDelimiter(",");//values separated by commas
+       //    for(int i = 0; i < 4; i++){
+       //        inFile.next(); 
+      //     }//end for loop
+           
+          String zipCode = ""; 
+          String lattitude = ""; 
+          String longitude = ""; 
+         
+          while(inFile.hasNextLine()){
+              zipCode = inFile.next();
+              lattitude = inFile.next();
+              longitude = inFile.next();
+              
+               Document doc = new Document("ZIP", zipCode)
+                                 .append("LAT", lattitude)
+                                 .append("LNG", longitude);
+               
+               System.out.println("\nzip"+ zipCode + "\n" + lattitude +"\n"+ longitude);
+               
+                   //*************ERROR WITH THIS*******************
+             // collectionZipCode.insertOne(doc);
+          }
+          inFile.close();
+            } // end try
+        catch (InputMismatchException e) {
+            System.out.println(e.toString());
+            console.next();
 
-                //pull out the lat and return it
-                 latit = latitude[1];
-      
-                return latit;
-            }//end if
-        }//end while 
-      
-        return 0;
+        } // end mismatch catch
+        catch (Exception e) {
+            System.out.println("/n" + e.toString());
+
+        } finally {
+        } // end catch 
+   
     }
+ 
 
-     // Searches for the given zip code in the input file and returns associated longitude 
-    public static long findLongitude(int targetZip, Scanner input) {
-        long longit = 0; 
-        while (input.hasNextInt()) {
-            int zip = input.nextInt();
-            if (zip == targetZip) {
-                // if the target zip code is found, it puts the lat and long into an array
-                long[] longitude = line.split(",");
-
-                //pull out the long and return it
-               longit = longitude[2];
-             
-                return longit;
-            }//end if
-        }//end while 
-        System.out.println("Zip code not found.");
-        return 0;
-    }
-    
-    
-    
-    
-    
-    
-    
     //add a new employee
     public void addNewEmployee() throws InvalidKeySpecException {
 
@@ -370,50 +381,20 @@ public class Methods {
         System.out.println("The employee's information has been updated.");
     }
 
-    //display all empployees
-    public void displayAllEmployees() {
-
-        FindIterable<Document> findIterable = collectionEE.find(new Document());
-        //print this collection
-        collectionEE = database.getCollection("Employee");
-
-        MongoCursor<Document> cursor = collectionEE.find().iterator();
-        try {
-            while (cursor.hasNext()) {
-                System.out.println(cursor.next().toJson());
-                System.out.println();
-            }
-        } finally {
-            cursor.close();
-        }
-
-        try (MongoCursor<Document> cur = collectionEE.find().iterator()) {
-            while (cur.hasNext()) {
-
-                Document doc = cur.next();
-
-                List list = new ArrayList(doc.values());
-                System.out.print(list.get(1));
-                System.out.print(": ");
-                System.out.println(list.get(2));
-            }
-        }
-
-        //this skips the first 3 items and only prints the next 7
-        //This will skip confidential information
-        FindIterable it = collectionEE.find().skip(3).limit(7);
-
-     //   it.forEach((Block<Document>) System.out::println);
-    }
-
     //track a package by its tracking number (id #)
     //****This should return a result of current location and shipping status or print here
     public void trackPackageByTrackingNumber() {
-
-        try {
+        
+try{
+        
             // Search for a package by the ID number
             System.out.println("What is the tracking number of the package you wish to locate?");
-            packageToSearch = console.next();// 
+            packageToSearch = console.next();
+            
+         
+            
+           Document myDoc = (Document) collectionPackage.find(eq("_id", packageToSearch));
+            System.out.println(myDoc.toJson());
 
             //retrieve currentLocation based off of package id (tracking number)
             FindIterable<Document> location = collectionPackage.
@@ -437,7 +418,7 @@ public class Methods {
 
         } finally {
         } // end catch
-
+        
     }//end trackPackage
 
     //calculate the shipping cost based on zip to zip
@@ -502,24 +483,6 @@ public class Methods {
         }
     }//end has method
 
-    /*
-     public byte[] getSalt(String login) throws Exception {
-     byte[] salt = new byte[32];
-       
-
-     //need to get the salt from Employee where the login matches
-     BasicDBObject searchQuery = new BasicDBObject();
-     searchQuery.put("login", login);
-     DBCursor cursor = collectionEE.find(searchQuery);
- 
-     while (cursor.hasNext()) {
-     System.out.println(cursor.next());
-     return salt;
-     }// end getSalt()
-     return salt; 
-     }
-
-     */
     // Returns Spherical distance in miles given the latitude 
     // and longitude of two points (depends on constant RADIUS)
     public static double distance(double lat1, double long1, double lat2, double long2) {
@@ -530,7 +493,7 @@ public class Methods {
         double theCos = Math.sin(lat1) * Math.sin(lat2)
                 + Math.cos(lat1) * Math.cos(lat2) * Math.cos(long1 - long2);
         double arcLength = Math.acos(theCos);
-        return arcLength * RADIUS;
+        return arcLength * EARTH_RADIUS;
     }
 
     /*
@@ -553,6 +516,26 @@ public class Methods {
         
      } 
     
+     */
+    
+    
+    /*
+     public byte[] getSalt(String login) throws Exception {
+     byte[] salt = new byte[32];
+       
+
+     //need to get the salt from Employee where the login matches
+     BasicDBObject searchQuery = new BasicDBObject();
+     searchQuery.put("login", login);
+     DBCursor cursor = collectionEE.find(searchQuery);
+ 
+     while (cursor.hasNext()) {
+     System.out.println(cursor.next());
+     return salt;
+     }// end getSalt()
+     return salt; 
+     }
+
      */
 }//end class
 
