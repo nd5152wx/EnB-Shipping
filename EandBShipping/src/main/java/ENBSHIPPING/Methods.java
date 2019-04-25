@@ -205,23 +205,6 @@ public class Methods {
 
     }//end shipNewPackage
     
-  
-
-    public double calculateShippingCost(int senderZipCode, int recipientZipCode, double weight) throws FileNotFoundException, IOException {
-
-        //find lat and long of a zip code
-       
-        long senderLatitude = 0;
-        long receiverLatitude = 0;
-        long senderLongitude = 0;
-        long receiverLongitude = 0;
-      
-    //    Scanner input = new Scanner(new File("zipCode-Lat-Long.txt"));
-
-    
-    return 0; 
-    }
-    
     @SuppressWarnings("empty-statement")
       public static void addZipCodes() throws FileNotFoundException, IOException{
            //access a collection
