@@ -230,7 +230,10 @@ public class ShippingClient {
                             case 22://user menu
                                 EB.trackPackageByTrackingNumber();
                                 break;
-
+                                
+                            case 23://user menu
+                            	EB.printLabel();
+                            	break;
                             case 0:// exit the user menu
                                 System.out.println("Exiting User Menu.");
                                 userFlag = false;
@@ -271,8 +274,8 @@ public class ShippingClient {
     }// end showAdminMenu
 
     public static void showUserMenu() {
-        System.out.println("\n\n 21 - Calculate Shipping Cost.\n 22 - Track a Package by Tracking Number\n "
-                + " 0 - Exit\n\n Please enter a command:\n");
+        System.out.println("\n\n 21 - Calculate Shipping Cost.\n 22 - Track a Package by Tracking Number"+
+    "\n 23 - Print a shipping label. \n 0 - Exit\n\n Please enter a command:\n");
     }//end showUserMenu
 }//end class
 
