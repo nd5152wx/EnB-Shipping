@@ -396,7 +396,7 @@ try{
             });
             
             
-
+            /*
             //retrieve currentLocation based off of package id (tracking number)
             FindIterable<Document> location = collectionPackage.
                     find(eq("_id", packageToSearch)).projection(fields(include("currentLocation", "_id")));
@@ -408,6 +408,7 @@ try{
 
                 }
             }
+            */
 
         } // end try
         catch (InputMismatchException e) {
