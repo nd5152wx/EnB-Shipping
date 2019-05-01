@@ -1,13 +1,12 @@
 package Pojos;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import org.bson.types.Binary;
 @JsonIgnoreProperties(ignoreUnknown = true)
 
 public class Person {
 	public String login;
-	public Binary salt;
-	public Binary hash;
+	public byte[] salt;
+	public byte[] hash;
 	public String firstName;
 	public String lastName;
 	public String address;
