@@ -64,10 +64,14 @@ public class Methods {
 	private String password = "";
 	// radius of the Earth in miles
 	public static final double EARTH_RADIUS = 3949.99;
+	final static double SHIPPING_COST = .05;
+	// radius of the Earth in miles
+	public static final double EARTH_RADIUS_MILES = 3963;
+	private static String EELogin = ""; // used to retrieve Admin or EE login
 	ObjectMapper mapper = new ObjectMapper();
 	static Scanner console = new Scanner(System.in);
 	Package packageObject = new Package();
-	Person personObject = new Person()
+	Person personObject = new Person();
 
 	// use driver 3.4.3. Paste in connection string in quotes
 	MongoClientURI uri = new MongoClientURI("mongodb://Joe:Parker1966@cluster0-shard-"
@@ -264,8 +268,8 @@ public class Methods {
 	}// end
 
 	// add a new employee
-	public void addNewEmployee() throws InvalidKeySpecException {
-
+	public void addNewEmployee() throws InvalidKeySpecException { // ****This works except doesn't put
+																	// put address in database
 		// The admin starts out by entering the employee information
 		System.out.println("What is the employee's first name?");
 		fName = console.next();
@@ -281,7 +285,6 @@ public class Methods {
 		console.next();
 		System.out.println("What state?");
 		String stateEE = console.next();
-
 		System.out.println("What is the employee's zip code?");
 		String zip = console.next();
 		System.out.println("What is the employee's phone number?");
@@ -294,30 +297,24 @@ public class Methods {
 		// The employee enters in this information
 		System.out.println("Please have the employee enter a login and password for their account.\n");
 		System.out.print("\nEnter the login for your account: ");
-		login = console.next();
+		String login = console.next();
 		System.out.print("\nEnter the password for your account: ");
-		password = console.next();
+		String password = console.next();
 
 		// generate a random salt to hash the password
 		SecureRandom rand = new SecureRandom();
 		byte[] salt = new byte[32];
 		rand.nextBytes(salt);
-		// byte[] hash = hash(password.toCharArray(),salt);
-		byte[] hash;
 
 		// create and insert a new employee document
 		Document doc = new Document("login", login).append("salt", salt)
 				.append("hash", hash(password.toCharArray(), salt)).append("firstName", fName).append("lastName", lName)
 				.append("address", addr).append("city", cityEE).append("state", stateEE).append("zipCode", zip)
-				.append("phoneNum", phoneNo) // will the employee be able to alter there pay rate if logging in this way
-				.append("payRate", pRate) // or should it be on a different account?
-				.append("startDate", sDate);
+				.append("phoneNum", phoneNo).append("payRate", pRate).append("startDate", sDate);
 
 		// insert the document into the database
 		collectionEE.insertOne(doc);
 
-		// Document myDoc = (Document) collectionEE.find(eq("login",login));
-		// System.out.println(myDoc.toJson());
 	}// end addNewEmployee
 
 	// track a package by its tracking number (id #)
@@ -373,9 +370,9 @@ public class Methods {
 
 	}// end trackPackage
 
-	// calculate the shipping cost based on zip to zip
+	// calculate the shipping cost based on zip to zip and weight
 	public double calculateShippingCost() {
-		System.out.println("What is the sending zipcode?"); // this should probably be done in the client and send in
+		System.out.println("What is the sending zipcode?");
 		senderZipcode = console.nextInt();
 
 		System.out.println("What is the recipient's zipcode?");
@@ -384,34 +381,71 @@ public class Methods {
 		System.out.println("What is the weight of the package?");
 		double weight = console.nextDouble();
 
-		// calculate the distance between the 2 zipcodes
-		// application key for EandBShipping
-		// 6f3omKcSjKiBVZCRvlzkM65TPLKysKvHCJfKh2gyZxRDAYpOOIXgraWwdq6jS2Qx
-		// https://www.zipcodeapi.com/Register
+		try {
+			// This retrieves the entire document that matches the sender's zip code
+			Document sendZip = (Document) collectionZipCode.find(eq("Zipcode", senderZipcode)).first();
+			if (sendZip == null) {
+				System.out.println("I'm sorry, but we do not have that zip code in our system.");
+			}
+			double fromLatitude = (double) (sendZip.get("Lat"));
+			double fromLongitude = (double) (sendZip.get("Long"));
+
+			// This retrieves the entire document that matches the recipient's zip code
+			Document toZip = (Document) collectionZipCode.find(eq("Zipcode", recipientZipcode)).first();
+			if (toZip == null) {
+				System.out.println("I'm sorry, but we do not have that zip code in our system.");
+			}
+			double toLatitude = (double) (toZip.get("Lat"));
+			double toLongitude = (double) (toZip.get("Long"));
+
+			// code to determine distance between two zip codes
+			double distanceBetweenZipcodes = distance2(fromLatitude, fromLongitude, toLatitude, toLongitude);
+
+			System.out.println("The distance between zip codes " + senderZipcode + " and" + recipientZipcode + "is "
+					+ distanceBetweenZipcodes + " miles.");
+
+			return (distanceBetweenZipcodes * SHIPPING_COST + weight);
+
+		} // end try
+		catch (InputMismatchException e) {
+			console.next();
+		} catch (NullPointerException r) {
+			System.out.println("/n" + r.toString());
+		} catch (Exception e) {
+			System.out.println("/n" + e.toString());
+
+		} finally {
+		} // end catch
+
 		return 0;
+
 	}
 
-	/*
-	 * private static boolean login() throws Exception { Scanner console = new
-	 * Scanner(System.in); String login; String password;
-	 * 
-	 * System.out.print("\nPlease enter your username: "); login = console.next();
-	 * System.out.print("\nPlease enter your password: "); password =
-	 * console.next();
-	 * 
-	 * 
-	 * 
-	 * //query database to get the user's password and salt based on login
-	 * 
-	 * byte[] salt = getSalt(login); byte[] encPass = getPassword(login);
-	 * 
-	 * byte[] hashed = hash(password.toCharArray(), salt);
-	 * 
-	 * for (int i = 0; i < encPass.length; i++) { if (encPass[i] != hashed[i]) {
-	 * System.out.println("Incorrect username / password entered. Please try again."
-	 * ); return false; } } return true; }//end login
-	 * 
-	 */
+	public boolean login() throws Exception {
+		Scanner console = new Scanner(System.in);
+		String login = "";
+		String password = "";
+
+		System.out.print("\nPlease enter your username: ");
+		EELogin = console.next();
+
+		System.out.print("\nPlease enter your password: ");
+		password = console.next();
+		byte[] salt = getSalt(login);
+		byte[] encodedPassword = getPassword(login);
+
+		byte[] hashed = hash(password.toCharArray(), salt);
+
+		for (int i = 0; i < encodedPassword.length; i++) {
+			if (encodedPassword[i] != hashed[i]) {
+				System.out.println("The username or password is incorrect. Please try again.");// shut off at 5 attempts
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	// converts password and salt to a hash value
 	public static byte[] hash(char[] password, byte[] salt) throws InvalidKeySpecException {
 		PBEKeySpec spec = new PBEKeySpec(password, salt, 10000, 256);
@@ -438,25 +472,39 @@ public class Methods {
 		return arcLength * EARTH_RADIUS;
 	}
 
-	/*
-	 * 
-	 * public byte[] getPassword(String login) throws Exception { byte[] password =
-	 * new byte[32]; Class.forName("com.mysql.jdbc.Driver");
-	 * 
-	 * 
-	 * //String sql = "SELECT encPass FROM TicketAgent WHERE login = ?";
-	 * 
-	 * //loop thru the returned array and get the bytes ResultSet set =
-	 * pst.executeQuery(); while (set.next()) { password = set.getBytes(1); } return
-	 * password; }// end getHash()
-	 * 
-	 * 
-	 * }
-	 * 
-	 */
+	// attempt II at distance method
+	// Returns Spherical distance in miles given the latitude
+	// and longitude of two points (depends on constant RADIUS)
+	public static double distance2(double lat1, double long1, double lat2, double long2) {
+		// named Math.toRadians converts degrees to radians
+		lat1 = Math.toRadians(lat1);
+		long1 = Math.toRadians(long1);
+		lat2 = Math.toRadians(lat2);
+		long2 = Math.toRadians(long2);
+
+		// Haversine formula
+		double distancelongInRadians = long2 - long1;
+		double distancelatInRadians = lat2 - lat1;
+
+		double a = Math.pow(Math.sin(distancelatInRadians / 2), 2)
+				+ Math.cos(lat1) * Math.cos(lat2) * Math.pow(Math.sin(distancelongInRadians / 2), 2);
+
+		double c = 2 * Math.asin(Math.sqrt(a));
+
+		// calculate the result
+		return (c * EARTH_RADIUS_MILES);
+	}
+
+	// need to retrieve the hashed password from database
+	public static byte[] getPassword(String login) throws Exception {
+		byte[] password = new byte[32];
+
+		return password;
+	}// end getPassword()
 
 	public byte[] getSalt(String login) throws Exception {
-		byte[] salt = new byte[32];
+		byte[] temp = new byte[32];
+		ArrayList<Person> results = new ArrayList<Person>();
 
 		try {
 			Iterable<Document> myDocIterable = collectionPackage.find(eq("login", login));
@@ -473,7 +521,7 @@ public class Methods {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				salt = personObject.getSalt();
+				results.add(personObject);
 			});
 
 		} // end try
@@ -486,7 +534,8 @@ public class Methods {
 
 		} finally {
 		} // end catch
-		return salt;
+		temp = results.get(0).getSalt();
+		return temp;
 	}
 
 }// end class
