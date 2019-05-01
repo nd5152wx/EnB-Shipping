@@ -17,4 +17,8 @@ public class Person {
 	public double payRate;
 	public String startDate;
 	
+	public byte[] getSalt(){
+		return salt;
+	}
+	
 }
