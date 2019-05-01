@@ -35,13 +35,8 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
 /**
- * Authors: Jason Richter/Joe Denzer 
- * Date: 7-May-2019 
- * Course: CS485 Database
- * Systems Design 
- * Instructor: John Bartucz 
- * Program: Client Program 
- * Description:
+ * Authors: Jason Richter/Joe Denzer Date: 7-May-2019 Course: CS485 Database
+ * Systems Design Instructor: John Bartucz Program: Client Program Description:
  * Package Description:
  */
 public class ShippingClient {
@@ -78,10 +73,8 @@ public class ShippingClient {
         //access a collection
         MongoCollection<Document> collection = database.getCollection("Package");
 
-       
-
         // Beginning of case/switch blocks
-       Scanner console = new Scanner(System.in);
+        Scanner console = new Scanner(System.in);
 
         while (permissionFlag) {
 
@@ -107,8 +100,8 @@ public class ShippingClient {
                 case 1: // case 1 of permissions
                     System.out.println("Admin menu (password protected).");
 
-                    //    boolean adminflag = login();
-                     //   while (adminflag) {
+                //      boolean adminflag = EB.login();
+                //       while (adminflag) {
                     while (tempFlag) {
 
                         int userCommand = Integer.MIN_VALUE;
@@ -132,7 +125,8 @@ public class ShippingClient {
 
                             case 1://Calculate shipping cost
                                 double cost = EB.calculateShippingCost();
-                                System.out.printf("The cost for this package is $%.2D", cost);
+                               // System.out.printf("The cost for this package is $%.2D", cost);
+                                 System.out.println( cost);
                                 break;
                             case 2://change the last name of an employee
                                 EB.shipNewPackage();
@@ -143,25 +137,16 @@ public class ShippingClient {
                                 //return shipping status and current location
                                 break;
                             case 4://add a new employee
-                                   EB.addNewEmployee();
+                                EB.addNewEmployee();
                                 System.out.println("The employee has been added to the database.");
                                 break;
-
-                            case 5://Delete an employee
-                              EB.deleteEmployee();
+                            case 5: //update current location of package
+                                EB.updateCurrentLocation();
                                 break;
-
-                            case 6://save for future use
-                                    System.out.println("Add zipcodes");
-                               Methods.addZipCodes(); 
-                                
-                            case 7:// Update employee information
-                              EB.updateEmployeeInformation();
-                                break;
-                            
                             case 0:// case 0 of Admin
                                 System.out.println("Thank you for using the E & B Shipping Co.");
                                 tempFlag = false;
+                                //adminFlag = false;
                                 break;
                             default:
                                 System.out.println("Please enter one of the displayed numbers.");
@@ -204,7 +189,7 @@ public class ShippingClient {
                             case 12://Employee menu track package by tracking number
                                 EB.trackPackageByTrackingNumber();
                                 break;
-                         
+
                             case 0:// exit the Employee menu
                                 employeeFlag = false;
                                 break;
@@ -277,14 +262,15 @@ public class ShippingClient {
 
     public static void showEmployeeMenu() {
         System.out.println("\n 11 - Calculate Shipping Cost.\n 13 -Track a Package by Tracking Number\n "
+                + " 3 - Ship New Package\n"
                 + " 0 - Exit\n\n Please enter a command:");
     }//end employeeMenu
 
     // print a user menu
     private static void showAdminMenu() {
         System.out.print("\n\n" + "1 - Calculate Shipping Cost\n" + "2 - Ship New Package\n"
-                + "3 - Track Package by Tracking Number\n" + "4 - Add New Employee\n" + "5 - Remove Employee\n"
-                + "6 - Add Zip Codes\n" + "7 - Update Employee Information \n" 
+                + "3 - Track Package by Tracking Number\n" + "4 - Add New Employee\n" 
+                + "5 - Update Current Location\n"
                 + "0 - Exit\n\n" + "Please enter a command: \n");
     }// end showAdminMenu
 
@@ -292,47 +278,19 @@ public class ShippingClient {
         System.out.println("\n\n 21 - Calculate Shipping Cost.\n 22 - Track a Package by Tracking Number\n "
                 + " 0 - Exit\n\n Please enter a command:\n");
     }//end showUserMenu
-
-    
-    //*********BELOW IS STUFF FOR REFERENCE*********************
-    /*
-     
-        
-        //create a document
-        Document doc = new Document("name", "MongoDB")
-                .append("type", "database")
-                .append("count", 1)
-                .append("versions", Arrays.asList("v3.2", "v3.0", "v2.6"))
-                .append("info", new Document("x", 203).append("y", 102));
-
-        //insert one doc
-      // collection.insertOne(doc);
-
-        //update a document
-   //     collection.updateOne(eq("i", 10), new Document("$set", new Document("i", 110)));
-
-        //delete one doc
-    //    collection.deleteOne(eq("i", 110));
-    
-    
-    
-     private static boolean login() throws Exception {
-
-     Scanner console = new Scanner(System.in);
-     String login;
-     String password;
-
-     System.out.print("\nPlease enter your username: ");
-     login = console.next();
-     System.out.print("\nPlease enter your password: ");
-     password = console.next();
-     return false;
-     }
-
-     */
 }//end class
 
-/*
+
+    //*********BELOW IS STUFF FOR REFERENCE*********************
+    /*
+ 
+ 
+     //update a document
+     //     collection.updateOne(eq("i", 10), new Document("$set", new Document("i", 110)));
+
+     //delete one doc
+     //    collection.deleteOne(eq("i", 110));
+
 
  //might need this 
  // Creating Credentials 
@@ -341,50 +299,32 @@ public class ShippingClient {
  "password".toCharArray());
  System.out.println("Connected to the database successfully");
 
-
-
- MySQLAccess dao = new MySQLAccess();
-		
- byte[] salt = dao.getSalt(login);
- byte[] encPass = dao.getPassword(login);
-		
- byte[] hashed = hash(password.toCharArray(), salt);
-		
- for (int i = 0; i < encPass.length; i++) {
- if (encPass[i] != hashed[i]) {
- System.out.println("Incorrect username / password entered. Please try again.");
- return false;
- }
- }
-		
- return true;
- }//end login
-
- 
-
- public static byte[] hash(char[] password, byte[] salt) {
- PBEKeySpec spec = new PBEKeySpec(password, salt, 10000, 256);
- Arrays.fill(password, Character.MIN_VALUE);
- try {
- SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
- return skf.generateSecret(spec).getEncoded();
- } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
- throw new AssertionError("Error while hashing a password: " + e.getMessage(), e);
- } finally {
- spec.clearPassword();
- }//end finally
- }//end byte[]
-	
- public static double milesBetweenTwoZipCodes(int sendingZipcode, int receivingZipcode) throws MalformedURLException  {
- // creates a URL with string representation. 
- URL url1 = new URL("https://www.melissa.com/v2/lookups/zipdistance/zipcode?zip1=" + sendingZipcode + "&zip2="+ receivingZipcode); 
-             
- return 0.0; 
-		
- }
  */
-// end class
 
-//The following example retrieves all documents from the inventory collection where status equals either "A" or "D":
+  /*
+     //update a document
+     collectionEE.updateOne(eq(employeeField, currentFieldData), new Document("$set", new Document(employeeField, newFieldData)));
+     System.out.println("The employee's information has been updated.");
 
-//findPublisher = collection.find(in("status", "A", "D"));
+      //update employee information
+    public void updateEmployeeInformation() { //****this works ********
+
+        System.out.println("Here is a list of employee fields:\n"
+                + "firstName, lastName, address, city, state, zipcode\n"
+                + "phoneNum, payRate, startDate\n\n");
+        System.out.println("Which field of employee do you wish to update?");
+        String employeeField = console.next();
+
+        //get the current data from the employee document that needs to be updated
+        System.out.println("What is the current " + employeeField + " of the employee that you wish to update?");
+        String currentFieldData = console.next();
+
+        //get the current data from the employee document that needs to be updated
+        System.out.println("What is the new " + employeeField + " of the employee??");
+        String newFieldData = console.next();
+
+        //update a document
+        collectionEE.updateOne(eq(employeeField, currentFieldData), new Document("$set", new Document(employeeField, newFieldData)));
+        System.out.println("The employee's information has been updated.");
+    }
+*/
