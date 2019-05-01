@@ -46,6 +46,7 @@ import javax.crypto.spec.PBEKeySpec;
 import javax.swing.JFileChooser;
 import static jdk.nashorn.tools.ShellFunctions.input;
 import org.bson.Document;
+import org.bson.types.ObjectId;
 
 /**
  *
@@ -92,109 +93,140 @@ public class Methods {
 
 	// access a collection
 	MongoCollection<Document> collectionAdmin = database.getCollection("Administrator");
+	
+	//ship a new package
+    public void shipNewPackage() {
+        double width, length, height, weight;   
+        double shippingCost = 0;
+        String senderFirstName;
+        String senderLastName;
+        String senderAddress;
+        String senderCity;
+        String senderState;
+        String senderZipCode;
+        String recipientFirstName;
+        String recipientLastName;
+        String recipientAddress;
+        String recipientCity;
+        String recipientState;
+        String recipientZipCode;
+        String shippingStatus; //keeps track of whether package has been shipped/delivered
+        String previousLocation; //keeps track of the previous stop of the delivery
+        String currentLocation; //the current city the package is in
+        String specialNotes; //note such as "place in garage"/who signed for package
+        final double SHIPPING_COST = .05;//cost per mile for shipping
 
-	// ship a new package
-	public void shipNewPackage() {
-		double width = 0;
-		double length = 0;
-		double height = 0;
-		double weight = 0;
-		double shippingCost = 0;
-		String senderFirstName = "";
-		String senderLastName = "";
-		String senderAddress = "";
-		String senderCity = "";
-		String senderState = "";
-		String senderZipCode = "";
-		String recipientFirstName = "";
-		String recipientLastName = "";
-		String recipientAddress = "";
-		String recipientCity = "";
-		String recipientState = "";
-		String recipientZipCode = "";
-		String shippingStatus = ""; // keeps track of whether package has been shipped/delivered
-		String currentLocation = ""; // the current city the package is in
-		String specialNotes = ""; // note such as "place in garage"/who signed for package
+        /*
+         //get the package specifics
+         System.out.println("What is the width of the package in inches?");
+         width = console.nextDouble();
+         console.nextLine();
+         System.out.println("What is the length of the package in inches?");
+         length = console.nextDouble();
+         console.nextLine();
+         System.out.println("What is the height of the package in inches?");
+         height = console.nextDouble();
+         console.nextLine();
+         System.out.println("What is the weight of the package in pounds?");
+         weight = console.nextDouble();
+         console.next();
+         //get the sender information
+         console.nextLine();//after int or double
+         System.out.println("What is the sender's first name?");
+         senderFirstName = console.nextLine();
+         System.out.println("What is the sender's last name?");
+         senderLastName = console.nextLine();
+         System.out.println("What is the sender's address?");
+         senderAddress = console.nextLine();
+               
+         */
+        
+        width = 12;
+        length = 14;
+        height = 24;
+        weight = 16;
+        senderFirstName = "John";
+        senderLastName = "Simpson";
+        senderAddress = "786 W East Way Road NE";
+         
+        System.out.println("What is the sender's city?");
+        senderCity = console.nextLine();
 
-		// get the package specifics
-		System.out.println("What is the width of the package?");
-		width = console.nextDouble();
-		System.out.println("What is the length of the package?");
-		length = console.nextDouble();
-		System.out.println("What is the heigth of the package?");
-		height = console.nextDouble();
-		System.out.println("What is the weight of the package in pounds?");
-		weight = console.nextDouble();
+        System.out.println("What is the sender's 5 digit zip code?");
+        senderZipCode = console.next();
 
-		// get the sender information
-		System.out.println("What is the sender's first name?");
-		senderFirstName = console.next();
+        /*
+        //get recipient information
+        System.out.println("What is the recipient's first name?");
+        recipientFirstName = console.next();
+        System.out.println("What is the recipient's last name?");
+        recipientLastName = console.next();
+        System.out.println("What is the recipient's address?");
+        recipientAddress = console.nextLine();
+        */
+         
+        recipientFirstName = "Bart";
+        recipientLastName = "Simpson";
+        recipientAddress = "687 E West Road Way SW";
+        
+        System.out.println("What is the recipient's city?");
+        recipientCity = console.nextLine();
 
-		System.out.println("What is the sender's last name?");
-		senderLastName = console.next();
+        System.out.println("What is the recipient's 5 digit zip code?");
+        recipientZipCode = console.next();
+        
+        
+        System.out.println("Are there any special notes for the delivery person?");
+        specialNotes = console.nextLine();
+     
+        shippingStatus = "HasShipped";
 
-		System.out.println("What is the sender's address?");
-		senderAddress = console.nextLine();
-		console.next();
-		System.out.println("What is the sender's city?");
-		senderAddress = console.next();
+        //set the current location of the package
+        currentLocation = senderCity;
 
-		System.out.println("What is the sender's state?");
-		senderState = console.next();
+        //insert new package into the database
+        Document doc = new Document("width", width)
+                .append("length", length)
+                .append("height", height)
+                .append("weightInPounds", weight)
+                .append("fromFirstName", senderFirstName)
+                .append("fromLastName", senderLastName)
+                .append("fromAddr", senderAddress)
+                .append("fromCity", senderCity)
+                .append("fromZipCode", senderZipCode)
+                .append("toFirstName", recipientFirstName)
+                .append("toLastName", recipientLastName)
+                .append("toAddr", recipientAddress)
+                .append("toCity", recipientCity)
+                .append("toZipCode", recipientZipCode)
+                .append("shippingStatus", shippingStatus)
+                .append("shippingCost", shippingCost)
+                .append("previousLocation", currentLocation)
+                .append("currentLocation", currentLocation)
+                .append("Notes", specialNotes);
 
-		System.out.println("What is the sender's zip code?");
-		senderZipCode = console.next();
+        //insert the document into the database
+        collectionPackage.insertOne(doc);
 
-		// get recipient information
-		System.out.println("What is the recipient's first name?");
-		recipientFirstName = console.next();
+        //Since the tracking number is the ObjecId, have to generate the package and then retrieve it to get the "tracking number"
+        //and then pull it back out.
+         //This retrieves the entire document that matches the sender's last name 
+        Document myDoc = (Document) collectionPackage.find(eq("fromLastName", senderLastName)).first();
+        if (myDoc == null) {
+            System.out.println("I'm sorry, but that package did not register in the system.");
+        }
+        
+        //This extracts the ObjectId from the retrieved document
+         ObjectId trackId = (ObjectId) (myDoc.get("_id"));
+        
+        
+         //This retrieves the entire document that matches the tracking number  
+         Document newDoc = (Document) collectionPackage.find(eq("_id", trackId)).first();
+         
+         //print out the this document to be used as a label
 
-		System.out.println("What is the recipient's last name?");
-		recipientLastName = console.next();
+    }//end shipNewPackage
 
-		System.out.println("What is the recipient's address?");
-		recipientAddress = console.nextLine();
-		console.next();
-		System.out.println("What is the recipient's city?");
-		recipientCity = console.next();
-		console.next();
-		System.out.println("What is the recipient's state?");
-		recipientState = console.next();
-
-		System.out.println("What is the recipient's zip code?");
-		recipientZipCode = console.next();
-		System.out.println("Are there any special notes for the delivery person?");
-		specialNotes = console.nextLine();
-		console.next();
-
-		// Need a better way to set this later if have time
-		shippingStatus = "HasShipped";
-
-		// set the current location of the package
-		currentLocation = senderCity;
-
-		// call method to calculate shipping cost
-		// shippingCost = calculateShippingCost(senderZipCode, recipientZipCode,
-		// weight);
-		System.out.println("The package will cost " + shippingCost + " to ship.");
-
-		// insert new package into the database
-		// create and insert a new employee document
-		Document doc = new Document("width", width).append("length", height).append("height", height)
-				.append("weightInPounds", weight).append("fromFirstName", senderFirstName)
-				.append("fromLastName", senderLastName).append("fromAddr", senderAddress).append("fromCity", senderCity)
-				.append("fromState", senderState).append("fromZipCode", senderZipCode)
-				.append("toFirstName", recipientFirstName).append("toLastName", recipientLastName)
-				.append("toAddr", recipientAddress).append("toCity", recipientCity).append("toState", recipientState)
-				.append("toZipCode", recipientZipCode).append("shippingStatus", shippingStatus)
-				.append("shippingCost", shippingCost).append("currentLocation", currentLocation)
-				.append("Notes", specialNotes);
-
-		// insert the document into the database
-		collectionPackage.insertOne(doc);
-		// print out the shipping label
-
-	}// end shipNewPackage
 
 	@SuppressWarnings("empty-statement")
 	public static void addZipCodes() throws FileNotFoundException, IOException {
