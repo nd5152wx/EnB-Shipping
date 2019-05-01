@@ -531,11 +531,11 @@ public class Methods {
 	}
 
 	
-	public void printLabel(String id) {
+	public void printLabel() {
 		try {
 
 			// Search for a package by the ID number
-			System.out.println("What is the tracking number of the package you wish to locate?");
+			System.out.println("What is the tracking number of the package you wish to print a label for?");
 			packageToSearch = console.next();
 
 			Iterable<Document> myDocIterable = collectionPackage.find(eq("trackingNum", packageToSearch));
@@ -552,8 +552,13 @@ public class Methods {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				System.out.println("\nTracking Number: " + packageObject.trackingNum + "\nCurrent location: "
-						+ packageObject.currentLocation + "\nPrevious location: " + packageObject.previousLocation);
+				System.out.println("*************************"+
+						"\nTracking Number: " + packageObject.trackingNum +
+						"\n\nMailed from ZIP: "+ packageObject.fromZipCode+
+						"\n\n\nShip to: "+packageObject.toFirstName+" "+packageObject.toLastName+
+						"\n"+packageObject.toAddr+
+						"\n"+packageObject.toCity+", "+packageObject.toZipCode+
+						"\n*************************");
 			});
 		} // end try
 		catch (InputMismatchException e) {
