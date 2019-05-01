@@ -338,47 +338,6 @@ public class Methods {
 		// System.out.println(myDoc.toJson());
 	}// end addNewEmployee
 
-	// remove an employee from the database **This works but only based on last
-	// name***
-	public void deleteEmployee() {
-		System.out.println("What is the employee's first name?");
-		fName = console.next();
-
-		System.out.println("What is the employee's last name?");
-		lName = console.next();
-
-		// first retrieve the employee document to ensure that it is the correct one
-		collectionEE.find(and(eq("firstName", fName), eq("lastName", lName)));
-
-		collectionEE.deleteOne(eq("lastName", lName));
-
-		// state that the employee has been removed from the database
-		System.out.println("The employee, " + fName + " " + lName + " has been removed from the database.");
-
-	}// end deleteEmployee
-
-	// update employee information. ***This method works**
-	public void updateEmployeeInformation() {
-
-		System.out.println("Here is a list of employee fields:\n"
-				+ "firstName, lastName, address, city, state, zipcode\n" + "phoneNum, payRate, startDate\n\n");
-		System.out.println("Which field of employee do you wish to update?");
-		String employeeField = console.next();
-
-		// get the current data from the employee document that needs to be updated
-		System.out.println("What is the current " + employeeField + " of the employee that you wish to update?");
-		String currentFieldData = console.next();
-
-		// get the current data from the employee document that needs to be updated
-		System.out.println("What is the new " + employeeField + " of the employee??");
-		String newFieldData = console.next();
-
-		// update a document
-		collectionEE.updateOne(eq(employeeField, currentFieldData),
-				new Document("$set", new Document(employeeField, newFieldData)));
-		System.out.println("The employee's information has been updated.");
-	}
-
 	// track a package by its tracking number (id #)
 	// ****This should return a result of current location and shipping status or
 	// print here
