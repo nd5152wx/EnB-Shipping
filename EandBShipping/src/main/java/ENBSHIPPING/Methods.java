@@ -5,6 +5,9 @@
  */
 package ENBSHIPPING;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.BasicDBObject;
 import com.mongodb.Block;
 import com.mongodb.DBCursor;
@@ -24,8 +27,8 @@ import static com.mongodb.client.model.Projections.fields;
 import static com.mongodb.client.model.Projections.include;
 
 import java.io.*;
-import java.io.FileNotFoundException;
 
+import Pojos.Package;
 
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
@@ -60,9 +63,9 @@ public class Methods {
     private String password = "";
     // radius of the Earth in miles
     public static final double EARTH_RADIUS = 3949.99;
-
+    ObjectMapper mapper = new ObjectMapper();
     static Scanner console = new Scanner(System.in);
-
+    Package packageObject = new Package();
     
     
     //use driver 3.4.3. Paste in connection string in quotes
@@ -374,10 +377,25 @@ try{
             System.out.println("What is the tracking number of the package you wish to locate?");
             packageToSearch = console.next();
             
-         
             
-           Document myDoc = (Document) collectionPackage.find(eq("_id", packageToSearch));
-            System.out.println(myDoc.toJson());
+            Iterable<Document> myDocIterable = collectionPackage.find(eq("trackingNum", packageToSearch));
+            myDocIterable.forEach( document -> {
+            	try {
+					packageObject = mapper.readValue(document.toJson(), Package.class);					
+				} catch (JsonParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (JsonMappingException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+            	System.out.println(packageObject.currentLocation);
+            });
+            
+            
 
             //retrieve currentLocation based off of package id (tracking number)
             FindIterable<Document> location = collectionPackage.
