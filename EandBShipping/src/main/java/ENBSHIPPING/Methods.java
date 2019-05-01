@@ -121,34 +121,38 @@ public class Methods {
 		final double SHIPPING_COST = .05;// cost per mile for shipping
 
 		/*
-		 * //get the package specifics
-		 * System.out.println("What is the width of the package in inches?"); width =
-		 * console.nextDouble(); console.nextLine();
-		 * System.out.println("What is the length of the package in inches?"); length =
-		 * console.nextDouble(); console.nextLine();
-		 * System.out.println("What is the height of the package in inches?"); height =
-		 * console.nextDouble(); console.nextLine();
-		 * System.out.println("What is the weight of the package in pounds?"); weight =
-		 * console.nextDouble(); console.next(); //get the sender information
-		 * console.nextLine();//after int or double
-		 * System.out.println("What is the sender's first name?"); senderFirstName =
-		 * console.nextLine(); System.out.println("What is the sender's last name?");
-		 * senderLastName = console.nextLine();
-		 * System.out.println("What is the sender's address?"); senderAddress =
-		 * console.nextLine();
-		 * 
-		 */
-
+		// get the package specifics
+		System.out.println("What is the width of the package in inches?");
+		width = console.nextDouble();
+		console.nextLine();
+		System.out.println("What is the length of the package in inches?");
+		length = console.nextDouble();
+		console.nextLine();
+		System.out.println("What is the height of the package in inches?");
+		height = console.nextDouble();
+		console.nextLine();
+		System.out.println("What is the weight of the package in pounds?");
+		weight = console.nextDouble();
+		console.next(); // get the sender information
+		console.nextLine();// after int or double
+		System.out.println("What is the sender's first name?");
+		senderFirstName = console.nextLine();
+		System.out.println("What is the sender's last name?");
+		senderLastName = console.nextLine();
+		System.out.println("What is the sender's address?");
+		senderAddress = console.nextLine();
+		*/
+		
 		width = 12;
 		length = 14;
 		height = 24;
 		weight = 16;
-		senderFirstName = "John";
-		senderLastName = "Simpson";
-		senderAddress = "786 W East Way Road NE";
+		senderFirstName = "Jason";
+		senderLastName = "Richter";
+		senderAddress = "117 7th st NW";
 
 		System.out.println("What is the sender's city?");
-		senderCity = console.nextLine();
+		senderCity = console.next();
 
 		System.out.println("What is the sender's 5 digit zip code?");
 		senderZipCode = console.next();
@@ -167,13 +171,13 @@ public class Methods {
 		recipientAddress = "687 E West Road Way SW";
 
 		System.out.println("What is the recipient's city?");
-		recipientCity = console.nextLine();
+		recipientCity = console.next();
 
 		System.out.println("What is the recipient's 5 digit zip code?");
 		recipientZipCode = console.next();
 
 		System.out.println("Are there any special notes for the delivery person?");
-		specialNotes = console.nextLine();
+		specialNotes = console.next();
 
 		shippingStatus = "HasShipped";
 
@@ -342,7 +346,8 @@ public class Methods {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				System.out.println(packageObject.currentLocation);
+				System.out.println("\nTracking Number: " + packageObject.trackingNum + "\nCurrent location: "
+						+ packageObject.currentLocation + "\nPrevious location: " + packageObject.previousLocation);
 			});
 
 			/*
