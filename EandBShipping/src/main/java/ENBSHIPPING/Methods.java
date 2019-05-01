@@ -349,19 +349,6 @@ public class Methods {
 				System.out.println("\nTracking Number: " + packageObject.trackingNum + "\nCurrent location: "
 						+ packageObject.currentLocation + "\nPrevious location: " + packageObject.previousLocation);
 			});
-
-			/*
-			 * //retrieve currentLocation based off of package id (tracking number)
-			 * FindIterable<Document> location = collectionPackage. find(eq("_id",
-			 * packageToSearch)).projection(fields(include("currentLocation", "_id"))); if
-			 * (location == null) { System.out.
-			 * println("I'm sorry, but we do not have that package in our system."); } else
-			 * { for (Document doc : location) {
-			 * System.out.println("The current location for that package is " + location);
-			 * 
-			 * } }
-			 */
-
 		} // end try
 		catch (InputMismatchException e) {
 			console.next();
@@ -543,4 +530,41 @@ public class Methods {
 		return temp;
 	}
 
+	
+	public void printLabel(String id) {
+		try {
+
+			// Search for a package by the ID number
+			System.out.println("What is the tracking number of the package you wish to locate?");
+			packageToSearch = console.next();
+
+			Iterable<Document> myDocIterable = collectionPackage.find(eq("trackingNum", packageToSearch));
+			myDocIterable.forEach(document -> {
+				try {
+					packageObject = mapper.readValue(document.toJson(), Package.class);
+				} catch (JsonParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (JsonMappingException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				System.out.println("\nTracking Number: " + packageObject.trackingNum + "\nCurrent location: "
+						+ packageObject.currentLocation + "\nPrevious location: " + packageObject.previousLocation);
+			});
+		} // end try
+		catch (InputMismatchException e) {
+			console.next();
+
+		} // end mismatch catch
+		catch (Exception e) {
+			System.out.println("/n" + e.toString());
+
+		} finally {
+		} // end catch
+	}
+	
 }// end class
