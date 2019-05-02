@@ -558,7 +558,7 @@ public class Methods {
 					e.printStackTrace();
 				}
 				System.out.println("*************************" + "\nTracking Number: " + packageObject.trackingNum
-						+ "\n\nMailed from ZIP: " + packageObject.fromZipCode + "\n\n\nShip to: "
+						+ "\n\nMailed from ZIP: " + packageObject.fromZipCode + "\n\nShip to: \n\n"
 						+ packageObject.toFirstName + " " + packageObject.toLastName + "\n" + packageObject.toAddr
 						+ "\n" + packageObject.toCity + ", " +
 						packageObject.toState + " " + packageObject.toZipCode + "\n*************************");
