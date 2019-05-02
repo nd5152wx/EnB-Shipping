@@ -152,7 +152,7 @@ public class Methods {
 
 		System.out.println("What is the sender's state?");
 		senderState = console.nextLine();
-		
+
 		System.out.println("What is the sender's 5 digit zip code?");
 		senderZipCode = console.nextLine();
 
@@ -165,14 +165,13 @@ public class Methods {
 		recipientAddress = console.nextLine();
 
 		/*
-		recipientFirstName = "Bart";
-		recipientLastName = "Simpson";
-		recipientAddress = "687 E West Road Way SW";
-		*/
+		 * recipientFirstName = "Bart"; recipientLastName = "Simpson"; recipientAddress
+		 * = "687 E West Road Way SW";
+		 */
 
 		System.out.println("What is the recipient's city?");
 		recipientCity = console.nextLine();
-		
+
 		System.out.println("What is the recipient's state?");
 		recipientState = console.nextLine();
 
@@ -186,40 +185,40 @@ public class Methods {
 
 		// set the current location of the package
 		currentLocation = senderCity;
-		
-		//set tracking number
+
+		// set tracking number
 		trackingNum = createTrackingNum(recipientZipCode);
 
 		// insert new package into the database
 		Document doc = new Document("trackingNum", trackingNum).append("width", width).append("length", length)
 				.append("height", height).append("weightInPounds", weight).append("fromFirstName", senderFirstName)
 				.append("fromLastName", senderLastName).append("fromAddr", senderAddress).append("fromCity", senderCity)
-				.append("fromState", senderState).append("fromZipCode", senderZipCode).append("toFirstName", recipientFirstName)
-				.append("toLastName", recipientLastName).append("toAddr", recipientAddress)
-				.append("toCity", recipientCity).append("toState", recipientState).append("toZipCode", recipientZipCode)
-				.append("shippingStatus", shippingStatus).append("shippingCost", shippingCost)
-				.append("previousLocation", currentLocation).append("currentLocation", currentLocation)
-				.append("Notes", specialNotes);
+				.append("fromState", senderState).append("fromZipCode", senderZipCode)
+				.append("toFirstName", recipientFirstName).append("toLastName", recipientLastName)
+				.append("toAddr", recipientAddress).append("toCity", recipientCity).append("toState", recipientState)
+				.append("toZipCode", recipientZipCode).append("shippingStatus", shippingStatus)
+				.append("shippingCost", shippingCost).append("previousLocation", currentLocation)
+				.append("currentLocation", currentLocation).append("Notes", specialNotes);
 
 		// insert the document into the database
 		collectionPackage.insertOne(doc);
-		
-		/* Old code
-		// Since the tracking number is the ObjecId, have to generate the package and
-		// then retrieve it to get the "tracking number"
-		// and then pull it back out.
-		// This retrieves the entire document that matches the sender's last name
-		Document myDoc = (Document) collectionPackage.find(eq("fromLastName", senderLastName)).first();
-		if (myDoc == null) {
-			System.out.println("I'm sorry, but that package did not register in the system.");
-		}
 
-		// This extracts the ObjectId from the retrieved document
-		ObjectId trackId = (ObjectId) (myDoc.get("_id"));
-
-		// This retrieves the entire document that matches the tracking number
-		Document newDoc = (Document) collectionPackage.find(eq("_id", trackId)).first();
-		*/
+		/*
+		 * Old code // Since the tracking number is the ObjecId, have to generate the
+		 * package and // then retrieve it to get the "tracking number" // and then pull
+		 * it back out. // This retrieves the entire document that matches the sender's
+		 * last name Document myDoc = (Document)
+		 * collectionPackage.find(eq("fromLastName", senderLastName)).first(); if (myDoc
+		 * == null) { System.out.
+		 * println("I'm sorry, but that package did not register in the system."); }
+		 * 
+		 * // This extracts the ObjectId from the retrieved document ObjectId trackId =
+		 * (ObjectId) (myDoc.get("_id"));
+		 * 
+		 * // This retrieves the entire document that matches the tracking number
+		 * Document newDoc = (Document) collectionPackage.find(eq("_id",
+		 * trackId)).first();
+		 */
 
 		// print out the this document to be used as a label
 		System.out.println("Here is the shipping label for your package:\n\n");
@@ -557,11 +556,24 @@ public class Methods {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				System.out.println("*************************" + "\nTracking Number: " + packageObject.trackingNum
+
+				String output = ("*************************" + "\nTracking Number: " + packageObject.trackingNum
 						+ "\n\nMailed from ZIP: " + packageObject.fromZipCode + "\n\nShip to: \n\n"
 						+ packageObject.toFirstName + " " + packageObject.toLastName + "\n" + packageObject.toAddr
-						+ "\n" + packageObject.toCity + ", " +
-						packageObject.toState + " " + packageObject.toZipCode + "\n*************************");
+						+ "\n" + packageObject.toCity + ", " + packageObject.toState + " " + packageObject.toZipCode
+						+ "\n*************************");
+
+				try (PrintWriter out = new PrintWriter(packageToSearch + ".txt")) {
+					out.println(output);
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				System.out.println("Shipping label saved to file!");
+				/*
+				 * Print in console shipping label
+				 * System.out.println(output);
+				 */
 			});
 		} // end try
 		catch (InputMismatchException e) {
@@ -573,27 +585,26 @@ public class Methods {
 
 		} finally {
 		} // end catch
-	}//end print label
-	
-	protected String createTrackingNum(String zip)
-	{
-	    // syntax we would like to generate is DIA123456-A1B34      
-	    String val = zip;	//start with reciever zip     
-	    val += "-";
+	}// end print label
 
-	    // char or numbers (10), random 0-9 A-Z
-	    for(int i = 0; i<11;){
-	        int ranAny = 48 + (new Random()).nextInt(90-65);
+	protected String createTrackingNum(String zip) {
+		// syntax we would like to generate is DIA123456-A1B34
+		String val = zip; // start with reciever zip
+		val += "-";
 
-	        if(!(57 < ranAny && ranAny<= 65)){
-	        char c = (char)ranAny;      
-	        val += c;
-	        i++;
-	        }
+		// char or numbers (10), random 0-9 A-Z
+		for (int i = 0; i < 11;) {
+			int ranAny = 48 + (new Random()).nextInt(90 - 65);
 
-	    }
+			if (!(57 < ranAny && ranAny <= 65)) {
+				char c = (char) ranAny;
+				val += c;
+				i++;
+			}
 
-	    return val;
+		}
+
+		return val;
 	}
 
 }// end class
