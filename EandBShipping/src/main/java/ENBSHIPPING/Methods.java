@@ -102,6 +102,7 @@ public class Methods {
 	public void shipNewPackage() {
 		double width, length, height, weight;
 		double shippingCost = 0;
+		String trackingNum;
 		String senderFirstName;
 		String senderLastName;
 		String senderAddress;
@@ -120,7 +121,6 @@ public class Methods {
 		String specialNotes; // note such as "place in garage"/who signed for package
 		final double SHIPPING_COST = .05;// cost per mile for shipping
 
-		/*
 		// get the package specifics
 		System.out.println("What is the width of the package in inches?");
 		width = console.nextDouble();
@@ -133,7 +133,6 @@ public class Methods {
 		console.nextLine();
 		System.out.println("What is the weight of the package in pounds?");
 		weight = console.nextDouble();
-		console.next(); // get the sender information
 		console.nextLine();// after int or double
 		System.out.println("What is the sender's first name?");
 		senderFirstName = console.nextLine();
@@ -141,37 +140,41 @@ public class Methods {
 		senderLastName = console.nextLine();
 		System.out.println("What is the sender's address?");
 		senderAddress = console.nextLine();
-		*/
-		
-		width = 12;
-		length = 14;
-		height = 24;
-		weight = 16;
-		senderFirstName = "Jason";
-		senderLastName = "Richter";
-		senderAddress = "117 7th st NW";
-
-		System.out.println("What is the sender's city?");
-		senderCity = console.next();
-
-		System.out.println("What is the sender's 5 digit zip code?");
-		senderZipCode = console.next();
 
 		/*
-		 * //get recipient information
-		 * System.out.println("What is the recipient's first name?"); recipientFirstName
-		 * = console.next(); System.out.println("What is the recipient's last name?");
-		 * recipientLastName = console.next();
-		 * System.out.println("What is the recipient's address?"); recipientAddress =
-		 * console.nextLine();
+		 * test section width = 12; length = 14; height = 24; weight = 16;
+		 * senderFirstName = "Jason"; senderLastName = "Richter"; senderAddress =
+		 * "117 7th st NW";
 		 */
 
+		System.out.println("What is the sender's city?");
+		senderCity = console.nextLine();
+
+		System.out.println("What is the sender's state?");
+		senderState = console.nextLine();
+		
+		System.out.println("What is the sender's 5 digit zip code?");
+		senderZipCode = console.nextLine();
+
+		// get recipient information
+		System.out.println("What is the recipient's first name?");
+		recipientFirstName = console.nextLine();
+		System.out.println("What is the recipient's last name?");
+		recipientLastName = console.nextLine();
+		System.out.println("What is the recipient's address?");
+		recipientAddress = console.nextLine();
+
+		/*
 		recipientFirstName = "Bart";
 		recipientLastName = "Simpson";
 		recipientAddress = "687 E West Road Way SW";
+		*/
 
 		System.out.println("What is the recipient's city?");
 		recipientCity = console.next();
+		
+		System.out.println("What is the recipient's state?");
+		recipientState = console.next();
 
 		System.out.println("What is the recipient's 5 digit zip code?");
 		recipientZipCode = console.next();
@@ -179,25 +182,29 @@ public class Methods {
 		System.out.println("Are there any special notes for the delivery person?");
 		specialNotes = console.next();
 
-		shippingStatus = "HasShipped";
+		shippingStatus = "NotShipped";
 
 		// set the current location of the package
 		currentLocation = senderCity;
+		
+		//set tracking number
+		trackingNum = createTrackingNum(recipientZipCode);
 
 		// insert new package into the database
-		Document doc = new Document("width", width).append("length", length).append("height", height)
-				.append("weightInPounds", weight).append("fromFirstName", senderFirstName)
+		Document doc = new Document("trackingNum", trackingNum).append("width", width).append("length", length)
+				.append("height", height).append("weightInPounds", weight).append("fromFirstName", senderFirstName)
 				.append("fromLastName", senderLastName).append("fromAddr", senderAddress).append("fromCity", senderCity)
-				.append("fromZipCode", senderZipCode).append("toFirstName", recipientFirstName)
+				.append("fromState", senderState).append("fromZipCode", senderZipCode).append("toFirstName", recipientFirstName)
 				.append("toLastName", recipientLastName).append("toAddr", recipientAddress)
-				.append("toCity", recipientCity).append("toZipCode", recipientZipCode)
+				.append("toCity", recipientCity).append("toState", recipientState).append("toZipCode", recipientZipCode)
 				.append("shippingStatus", shippingStatus).append("shippingCost", shippingCost)
 				.append("previousLocation", currentLocation).append("currentLocation", currentLocation)
 				.append("Notes", specialNotes);
 
 		// insert the document into the database
 		collectionPackage.insertOne(doc);
-
+		
+		/* Old code
 		// Since the tracking number is the ObjecId, have to generate the package and
 		// then retrieve it to get the "tracking number"
 		// and then pull it back out.
@@ -212,6 +219,7 @@ public class Methods {
 
 		// This retrieves the entire document that matches the tracking number
 		Document newDoc = (Document) collectionPackage.find(eq("_id", trackId)).first();
+		*/
 
 		// print out the this document to be used as a label
 
@@ -332,7 +340,7 @@ public class Methods {
 			System.out.println("What is the tracking number of the package you wish to locate?");
 			packageToSearch = console.next();
 
-			Iterable<Document> myDocIterable = collectionPackage.find(eq("trackingNum", packageToSearch));
+			Iterable<Document> myDocIterable = collectionPackage.find(eq("", packageToSearch));
 			myDocIterable.forEach(document -> {
 				try {
 					packageObject = mapper.readValue(document.toJson(), Package.class);
@@ -530,7 +538,6 @@ public class Methods {
 		return temp;
 	}
 
-	
 	public void printLabel() {
 		try {
 
@@ -552,13 +559,10 @@ public class Methods {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				System.out.println("*************************"+
-						"\nTracking Number: " + packageObject.trackingNum +
-						"\n\nMailed from ZIP: "+ packageObject.fromZipCode+
-						"\n\n\nShip to: "+packageObject.toFirstName+" "+packageObject.toLastName+
-						"\n"+packageObject.toAddr+
-						"\n"+packageObject.toCity+", "+packageObject.toZipCode+
-						"\n*************************");
+				System.out.println("*************************" + "\nTracking Number: " + packageObject.trackingNum
+						+ "\n\nMailed from ZIP: " + packageObject.fromZipCode + "\n\n\nShip to: "
+						+ packageObject.toFirstName + " " + packageObject.toLastName + "\n" + packageObject.toAddr
+						+ "\n" + packageObject.toCity + ", " + packageObject.toZipCode + "\n*************************");
 			});
 		} // end try
 		catch (InputMismatchException e) {
@@ -570,6 +574,27 @@ public class Methods {
 
 		} finally {
 		} // end catch
-	}
+	}//end print label
 	
+	protected String createTrackingNum(String zip)
+	{
+	    // syntax we would like to generate is DIA123456-A1B34      
+	    String val = zip;	//start with reciever zip     
+	    val += "-";
+
+	    // char or numbers (10), random 0-9 A-Z
+	    for(int i = 0; i<11;){
+	        int ranAny = 48 + (new Random()).nextInt(90-65);
+
+	        if(!(57 < ranAny && ranAny<= 65)){
+	        char c = (char)ranAny;      
+	        val += c;
+	        i++;
+	        }
+
+	    }
+
+	    return val;
+	}
+
 }// end class

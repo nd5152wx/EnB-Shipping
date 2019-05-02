@@ -236,7 +236,9 @@ public class ShippingClient {
                                 break;
                                 
                             case 23://user menu
-                            	EB.printLabel();
+                            	System.out.println("What is the tracking number of the package you wish to print a label for?");
+                    			String searched = console.next();
+                            	EB.printLabel(searched);
                             	break;
                             case 0:// exit the user menu
                                 System.out.println("Exiting User Menu.");
