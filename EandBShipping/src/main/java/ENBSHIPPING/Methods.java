@@ -223,7 +223,7 @@ public class Methods {
 
 		// print out the this document to be used as a label
 		System.out.println("Here is the shipping label for your package:\n\n");
-		printLabel();
+		printLabel(trackingNum);
 
 	}// end shipNewPackage
 
@@ -542,10 +542,6 @@ public class Methods {
 
 	public void printLabel(String packageToSearch) {
 		try {
-
-			// Search for a package by the ID number
-			System.out.println("What is the tracking number of the package you wish to print a label for?");
-			packageToSearch = console.next();
 
 			Iterable<Document> myDocIterable = collectionPackage.find(eq("trackingNum", packageToSearch));
 			myDocIterable.forEach(document -> {
