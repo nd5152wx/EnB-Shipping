@@ -21,4 +21,8 @@ public class Person {
 		return salt;
 	}
 	
+	public byte[] getHash() {
+		return hash;
+	}
+	
 }
