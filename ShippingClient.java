@@ -40,6 +40,7 @@ import javax.crypto.spec.PBEKeySpec;
  * Package Description:
  */
 public class ShippingClient {
+    
 
     //beginning of shipping variables
     private static String packageToSearch = ""; //This is the package ID and used to search for current locations
@@ -53,10 +54,12 @@ public class ShippingClient {
     static boolean userFlag = true;
     static boolean tempFlag = true;
     static boolean employeeFlag = true;
+    
 
     public static void main(String[] args) throws Exception {
-
+       
         Methods EB = new Methods();
+   
 
         //original login for Atlas
         //  MongoClientURI connectionString = new MongoClientURI("mongodb://localhost:27017");
