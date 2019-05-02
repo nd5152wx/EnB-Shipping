@@ -222,6 +222,8 @@ public class Methods {
 		*/
 
 		// print out the this document to be used as a label
+		System.out.println("Here is the shipping label for your package:\n\n");
+		printLabel();
 
 	}// end shipNewPackage
 
@@ -340,7 +342,7 @@ public class Methods {
 			System.out.println("What is the tracking number of the package you wish to locate?");
 			packageToSearch = console.next();
 
-			Iterable<Document> myDocIterable = collectionPackage.find(eq("", packageToSearch));
+			Iterable<Document> myDocIterable = collectionPackage.find(eq("trackingNum", packageToSearch));
 			myDocIterable.forEach(document -> {
 				try {
 					packageObject = mapper.readValue(document.toJson(), Package.class);
@@ -538,7 +540,7 @@ public class Methods {
 		return temp;
 	}
 
-	public void printLabel() {
+	public void printLabel(String packageToSearch) {
 		try {
 
 			// Search for a package by the ID number
