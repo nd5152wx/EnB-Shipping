@@ -27,6 +27,8 @@ import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.*;
 import java.util.Scanner;
+import java.util.logging.Level;
+
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
@@ -51,6 +53,9 @@ public class ShippingClient {
     static boolean employeeFlag = true;
 
     public static void main(String[] args) throws Exception {
+    	
+    	//This removes console logging from mongo. Comment out this line for diagnostic purposes
+        java.util.logging.Logger.getLogger("org.mongodb.driver").setLevel(Level.SEVERE);
 
         Methods EB = new Methods();
 
@@ -68,7 +73,6 @@ public class ShippingClient {
 
         //access a collection
         MongoCollection<Document> collection = database.getCollection("Package");
-
         // Beginning of case/switch blocks
         Scanner console = new Scanner(System.in);
 
