@@ -5,8 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 public class Person {
 	public String login;
-	public byte[] salt;
-	public byte[] hash;
+	public String salt;
+	public String hash;
 	public String firstName;
 	public String lastName;
 	public String address;
@@ -17,11 +17,11 @@ public class Person {
 	public double payRate;
 	public String startDate;
 	
-	public byte[] getSalt(){
+	public String getSalt(){
 		return salt;
 	}
 	
-	public byte[] getHash() {
+	public String getHash() {
 		return hash;
 	}
 	
