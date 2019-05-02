@@ -171,16 +171,16 @@ public class Methods {
 		*/
 
 		System.out.println("What is the recipient's city?");
-		recipientCity = console.next();
+		recipientCity = console.nextLine();
 		
 		System.out.println("What is the recipient's state?");
-		recipientState = console.next();
+		recipientState = console.nextLine();
 
 		System.out.println("What is the recipient's 5 digit zip code?");
-		recipientZipCode = console.next();
+		recipientZipCode = console.nextLine();
 
 		System.out.println("Are there any special notes for the delivery person?");
-		specialNotes = console.next();
+		specialNotes = console.nextLine();
 
 		shippingStatus = "NotShipped";
 
@@ -560,7 +560,8 @@ public class Methods {
 				System.out.println("*************************" + "\nTracking Number: " + packageObject.trackingNum
 						+ "\n\nMailed from ZIP: " + packageObject.fromZipCode + "\n\n\nShip to: "
 						+ packageObject.toFirstName + " " + packageObject.toLastName + "\n" + packageObject.toAddr
-						+ "\n" + packageObject.toCity + ", " + packageObject.toZipCode + "\n*************************");
+						+ "\n" + packageObject.toCity + ", " +
+						packageObject.toState + " " + packageObject.toZipCode + "\n*************************");
 			});
 		} // end try
 		catch (InputMismatchException e) {
