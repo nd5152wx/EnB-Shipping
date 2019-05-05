@@ -72,6 +72,7 @@ public class Methods {
 	static Scanner console = new Scanner(System.in);
 	Package packageObject = new Package();
 	Person personObject = new Person();
+	Person personObject2 = new Person();
 
 	// use driver 3.4.3. Paste in connection string in quotes
 	MongoClientURI uri = new MongoClientURI("mongodb://Joe:Parker1966@cluster0-shard-"
@@ -309,19 +310,26 @@ public class Methods {
 
 		// The employee enters in this information
 		System.out.println("Please have the employee enter a login and password for their account.\n");
-		System.out.print("\nEnter the login for your account: ");
+		
+		System.out.println("\nEnter the login for your account: ");
 		String login = console.next();
-		System.out.print("\nEnter the password for your account: ");
+		System.out.println("Login is :"+login);
+		
+		System.out.println("\nEnter the password for your account: ");
 		String password = console.next();
+		System.out.println("Password is :"+password);
 
 		// generate a random salt to hash the password
 		SecureRandom rand = new SecureRandom();
 		byte[] salt = new byte[32];
 		rand.nextBytes(salt);
-
+		String saltyString = Base64.getEncoder().encodeToString(salt);
+		String hash = Base64.getEncoder().encodeToString(hash(password.toCharArray(), saltyString.getBytes()));
+		
+		
 		// create and insert a new employee document
-		Document doc = new Document("login", login).append("salt", salt)
-				.append("hash", hash(password.toCharArray(), salt)).append("firstName", fName).append("lastName", lName)
+		Document doc = new Document("login", login).append("salt", saltyString)
+				.append("hash", hash).append("firstName", fName).append("lastName", lName)
 				.append("address", addr).append("city", cityEE).append("state", stateEE).append("zipCode", zip)
 				.append("phoneNum", phoneNo).append("payRate", pRate).append("startDate", sDate);
 
@@ -422,6 +430,7 @@ public class Methods {
 
 	}
 
+	/* old login method
 	public boolean login() throws Exception {
 		Scanner console = new Scanner(System.in);
 		String login = "";
@@ -446,6 +455,7 @@ public class Methods {
 
 		return true;
 	}
+	*/
 
 	// converts password and salt to a hash value
 	public static byte[] hash(char[] password, byte[] salt) throws InvalidKeySpecException {
@@ -497,18 +507,48 @@ public class Methods {
 	}
 
 	// need to retrieve the hashed password from database
-	public static byte[] getPassword(String login) throws Exception {
-		byte[] password = new byte[32];
-
-		return password;
-	}// end getPassword()
-
-	public byte[] getSalt(String login) throws Exception {
-		byte[] temp = new byte[32];
+	private String getPassword(String login) throws Exception {
+		String temp;
 		ArrayList<Person> results = new ArrayList<Person>();
 
 		try {
-			Iterable<Document> myDocIterable = collectionPackage.find(eq("login", login));
+			Iterable<Document> myDocIterable = collectionEE.find(eq("login", login));
+			myDocIterable.forEach(document -> {
+				try {
+					personObject2 = mapper.readValue(document.toJson(), Person.class);
+				} catch (JsonParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (JsonMappingException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				results.add(personObject2);
+			});
+
+		} // end try
+		catch (InputMismatchException e) {
+			console.next();
+
+		} // end mismatch catch
+		catch (Exception e) {
+			System.out.println("/n" + e.toString());
+
+		} finally {
+		} // end catch
+		temp = results.get(0).getHash();
+		return temp;
+	}// end getPassword()
+
+	private String getSalt(String login) throws Exception {
+		String temp;
+		ArrayList<Person> results = new ArrayList<Person>();
+
+		try {
+			Iterable<Document> myDocIterable = collectionEE.find(eq("login", login));
 			myDocIterable.forEach(document -> {
 				try {
 					personObject = mapper.readValue(document.toJson(), Person.class);
@@ -538,7 +578,21 @@ public class Methods {
 		temp = results.get(0).getSalt();
 		return temp;
 	}
-
+	
+	//checks password and returns a boolean
+	public boolean checkPassword(String login, String password) throws Exception {
+		boolean pass = false;
+		String salt = getSalt(login);
+		String hash = getPassword(login);
+		String input = Base64.getEncoder().encodeToString(hash(password.toCharArray(), salt.getBytes()));
+		System.out.println(hash);
+		System.out.println(input);
+		if(hash.equals(input)) {
+			pass = true;
+		}
+		return pass;
+	}
+	
 	public void printLabel(String packageToSearch) {
 		try {
 
@@ -571,8 +625,7 @@ public class Methods {
 				}
 				System.out.println("Shipping label saved to file!");
 				/*
-				 * Print in console shipping label
-				 * System.out.println(output);
+				 * Print in console shipping label System.out.println(output);
 				 */
 			});
 		} // end try
