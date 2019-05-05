@@ -98,8 +98,22 @@ public class ShippingClient {
             switch (permission) {
 
                 case 1: // case 1 of permissions
-                    System.out.println("Admin menu (password protected).");
+                	console.nextLine();
 
+                	System.out.println("Please enter your username: ");
+                	String login = console.nextLine();
+                	
+                	System.out.println("Please enter your password: ");
+                	String password = console.nextLine();
+                	
+                	/*
+                	if(EB.checkPassword(login, password) == false) {
+                		System.out.print("Password incorrect!");
+                		break;
+                	}
+                	*/
+                    System.out.println("Admin menu (password protected).");
+                    
                 //      boolean adminflag = EB.login();
                 //       while (adminflag) {
                     while (tempFlag) {
@@ -157,6 +171,17 @@ public class ShippingClient {
                     break;// end of Permissions case 1 (Admin)
 
                 case 2:// Start of Employee menu 
+                	console.nextLine();
+                	System.out.println("Please enter your username: ");
+                	String login2 = console.nextLine();
+                	
+                	System.out.println("Please enter your password: ");
+                	String password2 = console.nextLine();
+                	
+                	if(EB.checkPassword(login2, password2) == false) {
+                		System.out.print("Password incorrect!");
+                		break;
+                	}
 
                     int employeeCommand = Integer.MIN_VALUE;
 
