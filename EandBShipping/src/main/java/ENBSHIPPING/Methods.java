@@ -27,6 +27,7 @@ import static com.mongodb.client.model.Projections.fields;
 import static com.mongodb.client.model.Projections.include;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 import Pojos.Package;
 import Pojos.Person;
@@ -35,6 +36,8 @@ import static java.lang.Math.cos;
 import static java.lang.Math.sin;
 import static java.lang.System.console;
 import static java.rmi.server.ObjID.read;
+
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
@@ -96,8 +99,6 @@ public class Methods {
 	// access a collection
 	MongoCollection<Document> collectionPackage = database.getCollection("Package");
 
-	// access a collection
-	MongoCollection<Document> collectionAdmin = database.getCollection("Administrator");
 
 	// ship a new package
 	public void shipNewPackage() {
@@ -282,7 +283,7 @@ public class Methods {
 	}// end
 
 	// add a new employee
-	public void addNewEmployee() throws InvalidKeySpecException { // ****This works except doesn't put
+	public void addNewEmployee() throws InvalidKeySpecException, FileNotFoundException, IOException { // ****This works except doesn't put
 																	// put address in database
 		// The admin starts out by entering the employee information
 		System.out.println("What is the employee's first name?");
@@ -307,31 +308,35 @@ public class Methods {
 		double pRate = console.nextDouble();
 		System.out.println("What is the employee's start date?  DD-MM-YYYY");
 		String sDate = console.next(); // how to do a type Date??
+		
+		System.out.println("Will this employee be an admin? Y/N");
+		String admin = console.next();
+		boolean isAdmin = false;
+		if(admin.equalsIgnoreCase("y")) {
+			isAdmin = true;
+		}
 
 		// The employee enters in this information
 		System.out.println("Please have the employee enter a login and password for their account.\n");
-		
+
 		System.out.println("\nEnter the login for your account: ");
 		String login = console.next();
-		System.out.println("Login is :"+login);
-		
+		System.out.println("Login is: " + login);
+
 		System.out.println("\nEnter the password for your account: ");
 		String password = console.next();
-		System.out.println("Password is :"+password);
+		System.out.println("Password is: " + password);
 
 		// generate a random salt to hash the password
-		SecureRandom rand = new SecureRandom();
-		byte[] salt = new byte[32];
-		rand.nextBytes(salt);
-		String saltyString = Base64.getEncoder().encodeToString(salt);
-		String hash = Base64.getEncoder().encodeToString(hash(password.toCharArray(), saltyString.getBytes()));
 		
-		
+		String salt = generateSalt();
+		String hash = securePass(password, salt);
+				
 		// create and insert a new employee document
-		Document doc = new Document("login", login).append("salt", saltyString)
-				.append("hash", hash).append("firstName", fName).append("lastName", lName)
-				.append("address", addr).append("city", cityEE).append("state", stateEE).append("zipCode", zip)
-				.append("phoneNum", phoneNo).append("payRate", pRate).append("startDate", sDate);
+		Document doc = new Document("login", login).append("salt", salt).append("hash", hash)
+				.append("firstName", fName).append("lastName", lName).append("address", addr).append("city", cityEE)
+				.append("state", stateEE).append("zipCode", zip).append("phoneNum", phoneNo).append("payRate", pRate)
+				.append("startDate", sDate).append(admin, isAdmin);
 
 		// insert the document into the database
 		collectionEE.insertOne(doc);
@@ -430,46 +435,43 @@ public class Methods {
 
 	}
 
-	/* old login method
-	public boolean login() throws Exception {
-		Scanner console = new Scanner(System.in);
-		String login = "";
-		String password = "";
+	public String securePass(String password, String salt) throws FileNotFoundException, IOException {
 
-		System.out.print("\nPlease enter your username: ");
-		EELogin = console.next();
-
-		System.out.print("\nPlease enter your password: ");
-		password = console.next();
-		byte[] salt = getSalt(login);
-		byte[] encodedPassword = getPassword(login);
-
-		byte[] hashed = hash(password.toCharArray(), salt);
-
-		for (int i = 0; i < encodedPassword.length; i++) {
-			if (encodedPassword[i] != hashed[i]) {
-				System.out.println("The username or password is incorrect. Please try again.");// shut off at 5 attempts
-				return false;
-			}
-		}
-
-		return true;
-	}
-	*/
-
-	// converts password and salt to a hash value
-	public static byte[] hash(char[] password, byte[] salt) throws InvalidKeySpecException {
-		PBEKeySpec spec = new PBEKeySpec(password, salt, 10000, 256);
-		Arrays.fill(password, Character.MIN_VALUE);
+		String generatedPassword = "";
+		//System.out.println("Passed to secure: " + salt);
+		//System.out.println("The password: " + password);
 		try {
-			SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-			return skf.generateSecret(spec).getEncoded();
-		} catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-			throw new AssertionError("Error while hashing a password: " + e.getMessage(), e);
-		} finally {
-			spec.clearPassword();
+			MessageDigest md = MessageDigest.getInstance("SHA-256");
+			md.update(salt.getBytes(StandardCharsets.UTF_8));
+			byte[] bytes = md.digest(password.getBytes(StandardCharsets.UTF_8));
+			StringBuilder sb = new StringBuilder();
+			for (int i = 0; i < bytes.length; i++) {
+				sb.append(Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
+			}
+			generatedPassword = sb.toString();
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
 		}
-	}// end has method
+		return generatedPassword;
+	}
+
+	public String generateSalt() {
+		SecureRandom rand = new SecureRandom();
+		String newSalt = "";
+		byte[] salt = new byte[20];
+		rand.nextBytes(salt);
+		// 32 - 126
+		for (int i = 0; i < salt.length; i++) {
+			if (salt[i] > 126) {
+				salt[i] = 126;
+			}
+			if (salt[i] < 32) {
+				salt[i] = 32;
+			}
+			newSalt = newSalt + salt[i];
+		}
+		return newSalt;
+	}
 
 	// Returns Spherical distance in miles given the latitude
 	// and longitude of two points (depends on constant RADIUS)
@@ -578,21 +580,21 @@ public class Methods {
 		temp = results.get(0).getSalt();
 		return temp;
 	}
-	
-	//checks password and returns a boolean
+
+	// checks password and returns a boolean
 	public boolean checkPassword(String login, String password) throws Exception {
 		boolean pass = false;
 		String salt = getSalt(login);
 		String hash = getPassword(login);
-		String input = Base64.getEncoder().encodeToString(hash(password.toCharArray(), salt.getBytes()));
-		System.out.println(hash);
-		System.out.println(input);
-		if(hash.equals(input)) {
+		String input = securePass(password, salt);
+		//System.out.println(hash);
+		//System.out.println(input);
+		if (hash.equals(input)) {
 			pass = true;
 		}
 		return pass;
 	}
-	
+
 	public void printLabel(String packageToSearch) {
 		try {
 
@@ -641,7 +643,8 @@ public class Methods {
 	}// end print label
 
 	protected String createTrackingNum(String zip) {
-		// syntax we would like to generate is DIA123456-A1B34
+		// generates a tracking number with 5 digit zip code followed by 10 random
+		// digits
 		String val = zip; // start with reciever zip
 		val += "-";
 
