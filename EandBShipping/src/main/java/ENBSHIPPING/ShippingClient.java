@@ -232,6 +232,10 @@ public class ShippingClient {
 					case 12:// Employee menu track package by tracking number
 						EB.trackPackageByTrackingNumber();
 						break;
+						
+					case 13:// Employee send package
+						EB.shipNewPackage();
+						break;
 
 					case 0:// exit the Employee menu
 						employeeFlag = false;
@@ -319,8 +323,8 @@ public class ShippingClient {
 	}// end showPermissionMenu
 
 	public static void showEmployeeMenu() {
-		System.out.println("\n 11 - Calculate Shipping Cost.\n 13 -Track a Package by Tracking Number\n "
-				+ " 3 - Ship New Package\n" + " 0 - Exit\n\n Please enter a command:");
+		System.out.println("\n 11 - Calculate Shipping Cost.\n 12 -Track a Package by Tracking Number\n "
+				+ "13 - Ship New Package\n" + " 0 - Exit\n\n Please enter a command:");
 	}// end employeeMenu
 
 	// print a user menu
