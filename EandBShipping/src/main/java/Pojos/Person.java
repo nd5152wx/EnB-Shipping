@@ -16,6 +16,7 @@ public class Person {
 	public String phoneNum;
 	public double payRate;
 	public String startDate;
+	public boolean admin;
 	
 	public String getSalt(){
 		return salt;

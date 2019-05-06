@@ -23,6 +23,7 @@ import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.*;
@@ -39,313 +40,332 @@ import javax.crypto.spec.PBEKeySpec;
  */
 public class ShippingClient {
 
-    //beginning of shipping variables
-    private static String packageToSearch = ""; //This is the package ID and used to search for current locations
-    private static String fName = "";//used to do searches for either a sender or recipient
-    private static String lName = ""; //used to do searches for either a sender or recipient
-    private static int senderZipcode = 0; //used to determine shipping costs
-    private static int recipientZipcode = 0; //used to determine shipping costs
+	// beginning of shipping variables
+	private static DecimalFormat df2 = new DecimalFormat("#.##");
 
-    static boolean permissionFlag = true;
-    static int permission = Integer.MIN_VALUE;
-    static boolean userFlag = true;
-    static boolean tempFlag = true;
-    static boolean employeeFlag = true;
+	static boolean permissionFlag = true;
+	static int permission = Integer.MIN_VALUE;
+	static boolean userFlag = true;
+	static boolean tempFlag = true;
+	static boolean employeeFlag = true;
 
-    public static void main(String[] args) throws Exception {
-    	
-    	//This removes console logging from mongo. Comment out this line for diagnostic purposes
-        java.util.logging.Logger.getLogger("org.mongodb.driver").setLevel(Level.SEVERE);
+	public static void main(String[] args) throws Exception {
 
-        Methods EB = new Methods();
+		// This removes console logging from mongo. Comment out this line for diagnostic
+		// purposes
+		java.util.logging.Logger.getLogger("org.mongodb.driver").setLevel(Level.SEVERE);
 
-        //original login for Atlas
-        //  MongoClientURI connectionString = new MongoClientURI("mongodb://localhost:27017");
-        //  MongoClient mongoClient = new MongoClient("mongodb+srv://Jason:Pa33W7L@cluster0-68epl.mongodb.net/test?retryWrites=true");
-        //use driver 3.4.3. Paste in connection string in quotes
-        MongoClientURI uri = new MongoClientURI("mongodb://Joe:Parker1966@cluster0-shard-00-00-68epl.mongodb.net:27017,"
-                + "cluster0-shard-00-01-68epl.mongodb.net:27017,cluster0-shard-00-02-68epl.mongodb.net:27017/test?ssl="
-                + "true&replicaSet=Cluster0-shard-0&authSource=admin&retryWrites=true");
-        MongoClient mongoClient = new MongoClient(uri);
+		Methods EB = new Methods();
 
-        //access a database
-        MongoDatabase database = mongoClient.getDatabase("EnBShipping");
+		// original login for Atlas
+		// MongoClientURI connectionString = new
+		// MongoClientURI("mongodb://localhost:27017");
+		// MongoClient mongoClient = new
+		// MongoClient("mongodb+srv://Jason:Pa33W7L@cluster0-68epl.mongodb.net/test?retryWrites=true");
+		// use driver 3.4.3. Paste in connection string in quotes
+		MongoClientURI uri = new MongoClientURI("mongodb://Joe:Parker1966@cluster0-shard-00-00-68epl.mongodb.net:27017,"
+				+ "cluster0-shard-00-01-68epl.mongodb.net:27017,cluster0-shard-00-02-68epl.mongodb.net:27017/test?ssl="
+				+ "true&replicaSet=Cluster0-shard-0&authSource=admin&retryWrites=true");
+		MongoClient mongoClient = new MongoClient(uri);
 
-        //access a collection
-        MongoCollection<Document> collection = database.getCollection("Package");
-        // Beginning of case/switch blocks
-        Scanner console = new Scanner(System.in);
+		// access a database
+		MongoDatabase database = mongoClient.getDatabase("EnBShipping");
 
-        while (permissionFlag) {
+		// access a collection
+		MongoCollection<Document> collection = database.getCollection("Package");
+		// Beginning of case/switch blocks
+		Scanner console = new Scanner(System.in);
 
-            showPermissionMenu();
+		while (permissionFlag) {
 
-            // try/catch to prevent input crash
-            try {
-                permission = console.nextInt();
+			showPermissionMenu();
 
-            } // end try
-            catch (InputMismatchException e) {
-                console.next();
+			// try/catch to prevent input crash
+			try {
+				permission = console.nextInt();
 
-            } // end mismatch catch
-            catch (Exception e) {
-                System.out.println("/n" + e.toString());
+			} // end try
+			catch (InputMismatchException e) {
+				console.next();
 
-            } // end catch
+			} // end mismatch catch
+			catch (Exception e) {
+				System.out.println("/n" + e.toString());
 
-            //start of permissions for Admin, Employee, or User
-            switch (permission) {
+			} // end catch
 
-                case 1: // case 1 of permissions
-                	console.nextLine();
+			// start of permissions for Admin, Employee, or User
+			switch (permission) {
 
-                	System.out.println("Please enter your username: ");
-                	String login = console.nextLine();
-                	
-                	System.out.println("Please enter your password: ");
-                	String password = console.nextLine();
-                	
-                	/*
-                	if(EB.checkPassword(login, password) == false) {
-                		System.out.print("Password incorrect!");
-                		break;
-                	}
-                	*/
-                    System.out.println("Admin menu (password protected).");
-                    
-                //      boolean adminflag = EB.login();
-                //       while (adminflag) {
-                    while (tempFlag) {
+			case 1: // case 1 of permissions
+				console.nextLine();
 
-                        int userCommand = Integer.MIN_VALUE;
-                        showAdminMenu();
+				System.out.println("Please enter your username: ");
+				String login = console.nextLine();
 
-                        // try/catch to prevent input crash
-                        try {
-                            userCommand = console.nextInt();
+				System.out.println("Please enter your password: ");
+				String password = console.nextLine();
 
-                        } // end try
-                        catch (InputMismatchException e) {
-                            console.next();
+				if (EB.checkPassword(login, password) == false) {
+					System.out.print("Password incorrect!");
+					break;
+				}
+				else if(EB.checkAdmin(login) == false) {
+					System.out.print("You do not have enough permissions for this menu!");
+					break;
+				}
 
-                        } // end mismatch catch
-                        catch (Exception e) {
-                            System.out.println("/n" + e.toString());
+				System.out.println("Admin menu (password protected).");
 
-                        } // end catch
+				// boolean adminflag = EB.login();
+				// while (adminflag) {
+				while (tempFlag) {
 
-                        switch (userCommand) {
+					int userCommand = Integer.MIN_VALUE;
+					showAdminMenu();
 
-                            case 1://Calculate shipping cost
-                                double cost = EB.calculateShippingCost();
-                               // System.out.printf("The cost for this package is $%.2D", cost);
-                                 System.out.println( cost);
-                                break;
-                            case 2://change the last name of an employee
-                                EB.shipNewPackage();
-                                break;
-                            case 3://Track package by tracking number
-                                EB.trackPackageByTrackingNumber();
-                                //Search for a package by its "tracking number" (document id)
-                                //return shipping status and current location
-                                break;
-                            case 4://add a new employee
-                                EB.addNewEmployee();
-                                System.out.println("The employee has been added to the database.");
-                                break;
-                            case 5: //update current location of package
-                                EB.updateCurrentLocation();
-                                break;
-                            case 0:// case 0 of Admin
-                                System.out.println("Thank you for using the E & B Shipping Co.");
-                                tempFlag = false;
-                                //adminFlag = false;
-                                break;
-                            default:
-                                System.out.println("Please enter one of the displayed numbers.");
-                                break;
-                        }// end admin switch
-                    } // end admin while loop
+					// try/catch to prevent input crash
+					try {
+						userCommand = console.nextInt();
 
-                    break;// end of Permissions case 1 (Admin)
+					} // end try
+					catch (InputMismatchException e) {
+						console.next();
 
-                case 2:// Start of Employee menu 
-                	console.nextLine();
-                	System.out.println("Please enter your username: ");
-                	String login2 = console.nextLine();
-                	
-                	System.out.println("Please enter your password: ");
-                	String password2 = console.nextLine();
-                	
-                	if(EB.checkPassword(login2, password2) == false) {
-                		System.out.print("Password incorrect!");
-                		break;
-                	}
+					} // end mismatch catch
+					catch (Exception e) {
+						System.out.println("/n" + e.toString());
 
-                    int employeeCommand = Integer.MIN_VALUE;
+					} // end catch
 
-                    System.out.println("\n\nThis is the Employee menu.");
+					switch (userCommand) {
 
-                    while (employeeFlag) {
-                        // Display passenger menu
-                        showEmployeeMenu();
+					case 1:// Calculate shipping cost
+						System.out.println("What is the sender's 5 digit zip code?");
+						String senderZipCode = console.next();
+						System.out.println("What is the recipient's 5 digit zip code?");
+						String recipientZipCode = console.next();
+						System.out.println("What is the weight of the package in pounds?");
+						double weight = console.nextDouble();
 
-                        // try/catch to prevent input crash
-                        try {
-                            employeeCommand = console.nextInt();
+						double cost = EB.calculateShippingCost(senderZipCode, recipientZipCode, weight);
+						System.out.println("\nThe cost of shipping would be: $" + df2.format(cost));
+						break;
+					case 2:// change the last name of an employee
+						EB.shipNewPackage();
+						break;
+					case 3:// Track package by tracking number
+						EB.trackPackageByTrackingNumber();
+						// Search for a package by its "tracking number" (document id)
+						// return shipping status and current location
+						break;
+					case 4:// add a new employee
+						EB.addNewEmployee();
+						System.out.println("The employee has been added to the database.");
+						break;
+					case 5: // update current location of package
+						EB.updateCurrentLocation();
+						break;
+					case 0:// case 0 of Admin
+						System.out.println("Thank you for using the E & B Shipping Co.");
+						tempFlag = false;
+						// adminFlag = false;
+						break;
+					default:
+						System.out.println("Please enter one of the displayed numbers.");
+						break;
+					}// end admin switch
+				} // end admin while loop
 
-                        } // end try
-                        catch (InputMismatchException e) {
-                            console.next();
+				break;// end of Permissions case 1 (Admin)
 
-                        } // end mismatch catch
-                        catch (Exception e) {
-                            System.out.println("/n" + e.toString());
+			case 2:// Start of Employee menu
+				console.nextLine();
+				System.out.println("Please enter your username: ");
+				String login2 = console.nextLine();
 
-                        } // end catch
+				System.out.println("Please enter your password: ");
+				String password2 = console.nextLine();
 
-                        switch (employeeCommand) {
+				if (EB.checkPassword(login2, password2) == false) {
+					System.out.print("Password incorrect!");
+					break;
+				}
 
-                            case 11://Employee menu/calculate shipping cost
-                                double cost = EB.calculateShippingCost();
-                                break;
+				int employeeCommand = Integer.MIN_VALUE;
 
-                            case 12://Employee menu track package by tracking number
-                                EB.trackPackageByTrackingNumber();
-                                break;
+				System.out.println("\n\nThis is the Employee menu.");
 
-                            case 0:// exit the Employee menu
-                                employeeFlag = false;
-                                break;
-                            default:
-                                System.out.println("Please enter one of the displayed numbers.");
-                                break;
+				while (employeeFlag) {
+					// Display passenger menu
+					showEmployeeMenu();
 
-                        }// end employee switch   
-                    } // end employeeFlag
+					// try/catch to prevent input crash
+					try {
+						employeeCommand = console.nextInt();
 
-                case 3:// Start of User menu 
+					} // end try
+					catch (InputMismatchException e) {
+						console.next();
 
-                    int userCommand = Integer.MIN_VALUE;
+					} // end mismatch catch
+					catch (Exception e) {
+						System.out.println("/n" + e.toString());
 
-                    System.out.println("\n\nThis is the User menu.");
+					} // end catch
 
-                    while (userFlag) {
+					switch (employeeCommand) {
 
-                        // Display passenger menu
-                        showUserMenu();
+					case 11:// Employee menu/calculate shipping cost
+						System.out.println("What is the sender's 5 digit zip code?");
+						String senderZipCode = console.next();
+						System.out.println("What is the recipient's 5 digit zip code?");
+						String recipientZipCode = console.next();
+						System.out.println("What is the weight of the package in pounds?");
+						double weight = console.nextDouble();
 
-                        // try/catch to prevent input crash
-                        try {
-                            userCommand = console.nextInt();
+						double cost = EB.calculateShippingCost(senderZipCode, recipientZipCode, weight);
+						// System.out.printf("The cost for this package is $%.2D", cost);
+						System.out.println("\nThe cost of shipping would be: $" + df2.format(cost));
+						break;
 
-                        } // end try
-                        catch (InputMismatchException e) {
-                            console.next();
+					case 12:// Employee menu track package by tracking number
+						EB.trackPackageByTrackingNumber();
+						break;
 
-                        } // end mismatch catch
-                        catch (Exception e) {
-                            System.out.println("/n" + e.toString());
+					case 0:// exit the Employee menu
+						employeeFlag = false;
+						break;
+					default:
+						System.out.println("Please enter one of the displayed numbers.");
+						break;
 
-                        } // end catch statements
+					}// end employee switch
+				} // end employeeFlag
 
-                        switch (userCommand) {
+			case 3:// Start of User menu
 
-                            case 21://user menu
-                                double cost = EB.calculateShippingCost();
-                                break;
+				int userCommand = Integer.MIN_VALUE;
 
-                            case 22://user menu
-                                EB.trackPackageByTrackingNumber();
-                                break;
-                                
-                            case 23://user menu
-                            	System.out.println("What is the tracking number of the package you wish to print a label for?");
-                    			String searched = console.next();
-                            	EB.printLabel(searched);
-                            	break;
-                            case 0:// exit the user menu
-                                System.out.println("Exiting User Menu.");
-                                userFlag = false;
-                                break;
-                            default:
-                                System.out.println("Please enter one of the displayed numbers.");
-                                break;
+				System.out.println("\n\nThis is the User menu.");
 
-                        }// end user switch
-                    } // end userFlag
+				while (userFlag) {
 
-                case 0:// exit the program
-                    System.out.println("Thank you for using the E & B Shipping Co.");
-                    permissionFlag = false;
-                    break;
+					// Display passenger menu
+					showUserMenu();
 
-            }// End permission switch
-        } // end permission flag
+					// try/catch to prevent input crash
+					try {
+						userCommand = console.nextInt();
 
-    }// end main
+					} // end try
+					catch (InputMismatchException e) {
+						console.next();
 
-    public static void showPermissionMenu() {
-        System.out.println("\n\n 1 - Admin Menu: Password protected.\n 2 - Employee Menu: Password Protected\n 3 - User\n 0 - Exit\n\n Please enter a command:\n");
-    }//end showPermissionMenu
+					} // end mismatch catch
+					catch (Exception e) {
+						System.out.println("/n" + e.toString());
 
-    public static void showEmployeeMenu() {
-        System.out.println("\n 11 - Calculate Shipping Cost.\n 13 -Track a Package by Tracking Number\n "
-                + " 3 - Ship New Package\n"
-                + " 0 - Exit\n\n Please enter a command:");
-    }//end employeeMenu
+					} // end catch statements
 
-    // print a user menu
-    private static void showAdminMenu() {
-        System.out.print("\n\n" + "1 - Calculate Shipping Cost\n" + "2 - Ship New Package\n"
-                + "3 - Track Package by Tracking Number\n" + "4 - Add New Employee\n" 
-                + "5 - Update Current Location\n"
-                + "0 - Exit\n\n" + "Please enter a command: \n");
-    }// end showAdminMenu
+					switch (userCommand) {
 
-    public static void showUserMenu() {
-        System.out.println("\n\n 21 - Calculate Shipping Cost.\n 22 - Track a Package by Tracking Number"+
-    "\n 23 - Print a shipping label. \n 0 - Exit\n\n Please enter a command:\n");
-    }//end showUserMenu
-}//end class
+					case 21:// user menu
+						System.out.println("What is the sender's 5 digit zip code?");
+						String senderZipCode = console.next();
+						System.out.println("What is the recipient's 5 digit zip code?");
+						String recipientZipCode = console.next();
+						System.out.println("What is the weight of the package in pounds?");
+						double weight = console.nextDouble();
 
+						double cost = EB.calculateShippingCost(senderZipCode, recipientZipCode, weight);
+						// System.out.printf("The cost for this package is $%.2D", cost);
+						System.out.println("\nThe cost of shipping would be: $" + df2.format(cost));
+						break;
 
-    //*********BELOW IS STUFF FOR REFERENCE*********************
-    /*
- 
- 
-     //update a document
-     //     collection.updateOne(eq("i", 10), new Document("$set", new Document("i", 110)));
-     //delete one doc
-     //    collection.deleteOne(eq("i", 110));
- //might need this 
- // Creating Credentials 
- MongoCredential credential;
- credential = MongoCredential.createCredential("sampleUser", "myDb",
- "password".toCharArray());
- System.out.println("Connected to the database successfully");
+					case 22:// user menu
+						EB.trackPackageByTrackingNumber();
+						break;
+
+					case 23:// user menu
+						System.out.println("What is the tracking number of the package you wish to print a label for?");
+						String searched = console.next();
+						EB.printLabel(searched);
+						break;
+					case 0:// exit the user menu
+						System.out.println("Exiting User Menu.");
+						userFlag = false;
+						break;
+					default:
+						System.out.println("Please enter one of the displayed numbers.");
+						break;
+
+					}// end user switch
+				} // end userFlag
+
+			case 0:// exit the program
+				System.out.println("Thank you for using the E & B Shipping Co.");
+				permissionFlag = false;
+				break;
+
+			}// End permission switch
+		} // end permission flag
+
+	}// end main
+
+	public static void showPermissionMenu() {
+		System.out.println(
+				"\n\n 1 - Admin Menu: Password protected.\n 2 - Employee Menu: Password Protected\n 3 - User\n 0 - Exit\n\n Please enter a command:\n");
+	}// end showPermissionMenu
+
+	public static void showEmployeeMenu() {
+		System.out.println("\n 11 - Calculate Shipping Cost.\n 13 -Track a Package by Tracking Number\n "
+				+ " 3 - Ship New Package\n" + " 0 - Exit\n\n Please enter a command:");
+	}// end employeeMenu
+
+	// print a user menu
+	private static void showAdminMenu() {
+		System.out.print("\n\n" + "1 - Calculate Shipping Cost\n" + "2 - Ship New Package\n"
+				+ "3 - Track Package by Tracking Number\n" + "4 - Add New Employee\n" + "5 - Update Current Location\n"
+				+ "0 - Exit\n\n" + "Please enter a command: \n");
+	}// end showAdminMenu
+
+	public static void showUserMenu() {
+		System.out.println("\n\n 21 - Calculate Shipping Cost.\n 22 - Track a Package by Tracking Number"
+				+ "\n 23 - Print a shipping label. \n 0 - Exit\n\n Please enter a command:\n");
+	}// end showUserMenu
+}// end class
+
+// *********BELOW IS STUFF FOR REFERENCE*********************
+/*
+ * 
+ * 
+ * //update a document // collection.updateOne(eq("i", 10), new Document("$set",
+ * new Document("i", 110))); //delete one doc // collection.deleteOne(eq("i",
+ * 110)); //might need this // Creating Credentials MongoCredential credential;
+ * credential = MongoCredential.createCredential("sampleUser", "myDb",
+ * "password".toCharArray());
+ * System.out.println("Connected to the database successfully");
  */
 
-  /*
-     //update a document
-     collectionEE.updateOne(eq(employeeField, currentFieldData), new Document("$set", new Document(employeeField, newFieldData)));
-     System.out.println("The employee's information has been updated.");
-      //update employee information
-    public void updateEmployeeInformation() { //****this works ********
-        System.out.println("Here is a list of employee fields:\n"
-                + "firstName, lastName, address, city, state, zipcode\n"
-                + "phoneNum, payRate, startDate\n\n");
-        System.out.println("Which field of employee do you wish to update?");
-        String employeeField = console.next();
-        //get the current data from the employee document that needs to be updated
-        System.out.println("What is the current " + employeeField + " of the employee that you wish to update?");
-        String currentFieldData = console.next();
-        //get the current data from the employee document that needs to be updated
-        System.out.println("What is the new " + employeeField + " of the employee??");
-        String newFieldData = console.next();
-        //update a document
-        collectionEE.updateOne(eq(employeeField, currentFieldData), new Document("$set", new Document(employeeField, newFieldData)));
-        System.out.println("The employee's information has been updated.");
-    }
-*/
+/*
+ * //update a document collectionEE.updateOne(eq(employeeField,
+ * currentFieldData), new Document("$set", new Document(employeeField,
+ * newFieldData)));
+ * System.out.println("The employee's information has been updated."); //update
+ * employee information public void updateEmployeeInformation() { //****this
+ * works ******** System.out.println("Here is a list of employee fields:\n" +
+ * "firstName, lastName, address, city, state, zipcode\n" +
+ * "phoneNum, payRate, startDate\n\n");
+ * System.out.println("Which field of employee do you wish to update?"); String
+ * employeeField = console.next(); //get the current data from the employee
+ * document that needs to be updated System.out.println("What is the current " +
+ * employeeField + " of the employee that you wish to update?"); String
+ * currentFieldData = console.next(); //get the current data from the employee
+ * document that needs to be updated System.out.println("What is the new " +
+ * employeeField + " of the employee??"); String newFieldData = console.next();
+ * //update a document collectionEE.updateOne(eq(employeeField,
+ * currentFieldData), new Document("$set", new Document(employeeField,
+ * newFieldData)));
+ * System.out.println("The employee's information has been updated."); }
+ */

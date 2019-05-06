@@ -27,6 +27,7 @@ import static com.mongodb.client.model.Projections.fields;
 import static com.mongodb.client.model.Projections.include;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 import Pojos.Package;
 import Pojos.Person;
@@ -35,9 +36,12 @@ import static java.lang.Math.cos;
 import static java.lang.Math.sin;
 import static java.lang.System.console;
 import static java.rmi.server.ObjID.read;
+
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -58,10 +62,6 @@ public class Methods {
 	private static String packageToSearch = ""; // This is the package ID and used to search for current locations
 	private static String fName = "";// used to do searches for either a sender or recipient
 	private static String lName = ""; // used to do searches for either a sender or recipient
-	private static int senderZipcode = 0; // used to determine shipping costs
-	private static int recipientZipcode = 0; // used to determine shipping costs
-	private String login = "";
-	private String password = "";
 	// radius of the Earth in miles
 	public static final double EARTH_RADIUS = 3949.99;
 	final static double SHIPPING_COST = .05;
@@ -73,6 +73,10 @@ public class Methods {
 	Package packageObject = new Package();
 	Person personObject = new Person();
 	Person personObject2 = new Person();
+	final static double SHIPPING_COST_UNDER_TEN = .009;
+	final static double SHIPPING_COST_OVER_TEN = .01;
+	final static double SHIPPING_COST_OVER_FORTY = .06;
+	private static DecimalFormat df2 = new DecimalFormat("#.##");
 
 	// use driver 3.4.3. Paste in connection string in quotes
 	MongoClientURI uri = new MongoClientURI("mongodb://Joe:Parker1966@cluster0-shard-"
@@ -91,13 +95,10 @@ public class Methods {
 	MongoCollection<Document> collectionEE = database.getCollection("Employee");
 
 	// access a collection
-	MongoCollection<Document> collectionZipCode = database.getCollection("ZipCode");
+	MongoCollection<Document> collectionZipCode = database.getCollection("USZipCodes");
 
 	// access a collection
 	MongoCollection<Document> collectionPackage = database.getCollection("Package");
-
-	// access a collection
-	MongoCollection<Document> collectionAdmin = database.getCollection("Administrator");
 
 	// ship a new package
 	public void shipNewPackage() {
@@ -120,7 +121,6 @@ public class Methods {
 		String previousLocation; // keeps track of the previous stop of the delivery
 		String currentLocation; // the current city the package is in
 		String specialNotes; // note such as "place in garage"/who signed for package
-		final double SHIPPING_COST = .05;// cost per mile for shipping
 
 		// get the package specifics
 		System.out.println("What is the width of the package in inches?");
@@ -142,12 +142,6 @@ public class Methods {
 		System.out.println("What is the sender's address?");
 		senderAddress = console.nextLine();
 
-		/*
-		 * test section width = 12; length = 14; height = 24; weight = 16;
-		 * senderFirstName = "Jason"; senderLastName = "Richter"; senderAddress =
-		 * "117 7th st NW";
-		 */
-
 		System.out.println("What is the sender's city?");
 		senderCity = console.nextLine();
 
@@ -165,11 +159,6 @@ public class Methods {
 		System.out.println("What is the recipient's address?");
 		recipientAddress = console.nextLine();
 
-		/*
-		 * recipientFirstName = "Bart"; recipientLastName = "Simpson"; recipientAddress
-		 * = "687 E West Road Way SW";
-		 */
-
 		System.out.println("What is the recipient's city?");
 		recipientCity = console.nextLine();
 
@@ -182,13 +171,17 @@ public class Methods {
 		System.out.println("Are there any special notes for the delivery person?");
 		specialNotes = console.nextLine();
 
-		shippingStatus = "NotShipped";
+		shippingStatus = "Shipped";
 
 		// set the current location of the package
 		currentLocation = senderCity;
 
 		// set tracking number
 		trackingNum = createTrackingNum(recipientZipCode);
+
+		// set shipping cost
+		shippingCost = calculateShippingCost(senderZipCode, recipientZipCode, weight);
+		System.out.println("\nYour shipping cost is: $" + df2.format(shippingCost));
 
 		// insert new package into the database
 		Document doc = new Document("trackingNum", trackingNum).append("width", width).append("length", length)
@@ -204,25 +197,9 @@ public class Methods {
 		// insert the document into the database
 		collectionPackage.insertOne(doc);
 
-		/*
-		 * Old code // Since the tracking number is the ObjecId, have to generate the
-		 * package and // then retrieve it to get the "tracking number" // and then pull
-		 * it back out. // This retrieves the entire document that matches the sender's
-		 * last name Document myDoc = (Document)
-		 * collectionPackage.find(eq("fromLastName", senderLastName)).first(); if (myDoc
-		 * == null) { System.out.
-		 * println("I'm sorry, but that package did not register in the system."); }
-		 * 
-		 * // This extracts the ObjectId from the retrieved document ObjectId trackId =
-		 * (ObjectId) (myDoc.get("_id"));
-		 * 
-		 * // This retrieves the entire document that matches the tracking number
-		 * Document newDoc = (Document) collectionPackage.find(eq("_id",
-		 * trackId)).first();
-		 */
-
 		// print out the this document to be used as a label
-		System.out.println("Here is the shipping label for your package:\n\n");
+		System.out.print("\nCreating shipping label..........\n\n");
+
 		printLabel(trackingNum);
 
 	}// end shipNewPackage
@@ -234,14 +211,11 @@ public class Methods {
 		try {
 			// Search for a package by the ID number
 			System.out.println("What is the tracking number of the package you wish to update?");
-			packageToSearch = console.next();
-
-			// cast tracking number as an ObjectId
-			ObjectId trackId = new ObjectId(packageToSearch);
+			String trackingNum = console.next();
 
 			// This retrieves the entire document that matches the tracking number (Using
 			// _id)
-			Document myDoc = (Document) collectionPackage.find(eq("_id", trackId)).first();
+			Document myDoc = (Document) collectionPackage.find(eq("trackingNum", trackingNum)).first();
 
 			// if there is a null pointer exception, the document does not exist
 			if (myDoc == null) {
@@ -253,12 +227,26 @@ public class Methods {
 			// This extracts the previous location of the package
 			String previousCity = (String) (myDoc.get("previousLocation"));
 
+			// gets old status
+			String oldStatus = (String) (myDoc.get("shippingStatus"));
+
 			if (currentCity == null) { // if the current location is null
 				System.out.println("Im sorry, but the current location of the package is not available.");
 			}
 
 			System.out.println("What is the new location of the package?");
 			String newCity = console.next();
+
+			System.out.println("Would you like to change the status of this package? Y/N");
+			String input = console.next();
+			if (input.equalsIgnoreCase("y")) {
+				System.out.println("What is the new status of the package?");
+				String status = console.next();
+
+				// update the document for new status
+				collectionPackage.updateOne(eq("shippingStatus", oldStatus),
+						new Document("$set", new Document("shippingStatus", status)));
+			}
 
 			// update the document for previous location
 			collectionPackage.updateOne(eq("previousLocation", previousCity),
@@ -282,8 +270,10 @@ public class Methods {
 	}// end
 
 	// add a new employee
-	public void addNewEmployee() throws InvalidKeySpecException { // ****This works except doesn't put
-																	// put address in database
+	public void addNewEmployee() throws InvalidKeySpecException, FileNotFoundException, IOException { // ****This works
+																										// except
+																										// doesn't put
+		// put address in database
 		// The admin starts out by entering the employee information
 		System.out.println("What is the employee's first name?");
 		fName = console.next();
@@ -308,30 +298,34 @@ public class Methods {
 		System.out.println("What is the employee's start date?  DD-MM-YYYY");
 		String sDate = console.next(); // how to do a type Date??
 
+		System.out.println("Will this employee be an admin? Y/N");
+		String admin = console.next();
+		boolean isAdmin = false;
+		if (admin.equalsIgnoreCase("y")) {
+			isAdmin = true;
+		}
+
 		// The employee enters in this information
 		System.out.println("Please have the employee enter a login and password for their account.\n");
-		
+
 		System.out.println("\nEnter the login for your account: ");
 		String login = console.next();
-		System.out.println("Login is :"+login);
-		
+		System.out.println("Login is: " + login);
+
 		System.out.println("\nEnter the password for your account: ");
 		String password = console.next();
-		System.out.println("Password is :"+password);
+		System.out.println("Password is: " + password);
 
 		// generate a random salt to hash the password
-		SecureRandom rand = new SecureRandom();
-		byte[] salt = new byte[32];
-		rand.nextBytes(salt);
-		String saltyString = Base64.getEncoder().encodeToString(salt);
-		String hash = Base64.getEncoder().encodeToString(hash(password.toCharArray(), saltyString.getBytes()));
-		
-		
+
+		String salt = generateSalt();
+		String hash = securePass(password, salt);
+
 		// create and insert a new employee document
-		Document doc = new Document("login", login).append("salt", saltyString)
-				.append("hash", hash).append("firstName", fName).append("lastName", lName)
-				.append("address", addr).append("city", cityEE).append("state", stateEE).append("zipCode", zip)
-				.append("phoneNum", phoneNo).append("payRate", pRate).append("startDate", sDate);
+		Document doc = new Document("login", login).append("salt", salt).append("hash", hash).append("firstName", fName)
+				.append("lastName", lName).append("address", addr).append("city", cityEE).append("state", stateEE)
+				.append("zipCode", zip).append("phoneNum", phoneNo).append("payRate", pRate).append("startDate", sDate)
+				.append("admin", isAdmin);
 
 		// insert the document into the database
 		collectionEE.insertOne(doc);
@@ -364,7 +358,8 @@ public class Methods {
 					e.printStackTrace();
 				}
 				System.out.println("\nTracking Number: " + packageObject.trackingNum + "\nCurrent location: "
-						+ packageObject.currentLocation + "\nPrevious location: " + packageObject.previousLocation);
+						+ packageObject.currentLocation + "\nPrevious location: " + packageObject.previousLocation
+						+ "\nStatus: " + packageObject.shippingStatus);
 			});
 		} // end try
 		catch (InputMismatchException e) {
@@ -380,40 +375,48 @@ public class Methods {
 	}// end trackPackage
 
 	// calculate the shipping cost based on zip to zip and weight
-	public double calculateShippingCost() {
-		System.out.println("What is the sending zipcode?");
-		senderZipcode = console.nextInt();
-
-		System.out.println("What is the recipient's zipcode?");
-		recipientZipcode = console.nextInt();
-
-		System.out.println("What is the weight of the package?");
-		double weight = console.nextDouble();
+	public double calculateShippingCost(String fromZipCODE, String toZipCODE, double weight) {
 
 		try {
+
 			// This retrieves the entire document that matches the sender's zip code
-			Document sendZip = (Document) collectionZipCode.find(eq("Zipcode", senderZipcode)).first();
+			Document sendZip = (Document) collectionZipCode.find(eq("Zipcode", fromZipCODE)).first();
 			if (sendZip == null) {
-				System.out.println("I'm sorry, but we do not have that zip code in our system.");
+				System.out.println("I'm sorry, but we do not have that sending zip code in our system.");
 			}
-			double fromLatitude = (double) (sendZip.get("Lat"));
-			double fromLongitude = (double) (sendZip.get("Long"));
+			String fromLatitude = (String) (sendZip.get("Lat"));
+			String fromLongitude = (String) (sendZip.get("Long"));
 
 			// This retrieves the entire document that matches the recipient's zip code
-			Document toZip = (Document) collectionZipCode.find(eq("Zipcode", recipientZipcode)).first();
+			Document toZip = (Document) collectionZipCode.find(eq("Zipcode", toZipCODE)).first();
 			if (toZip == null) {
-				System.out.println("I'm sorry, but we do not have that zip code in our system.");
+				System.out.println("I'm sorry, but we do not have that recipient zip code in our system.");
 			}
-			double toLatitude = (double) (toZip.get("Lat"));
-			double toLongitude = (double) (toZip.get("Long"));
+			String toLatitude = (String) (toZip.get("Lat"));
+			String toLongitude = (String) (toZip.get("Long"));
+
+			double recipientLatitude = Double.parseDouble(toLatitude);
+			double recipientLongitude = Double.parseDouble(toLongitude);
+			double senderLatitude = Double.parseDouble(fromLatitude);
+			double senderLongitude = Double.parseDouble(fromLongitude);
 
 			// code to determine distance between two zip codes
-			double distanceBetweenZipcodes = distance2(fromLatitude, fromLongitude, toLatitude, toLongitude);
+			double distanceBetweenZipcodes = distance2(senderLatitude, senderLongitude, recipientLatitude,
+					recipientLongitude);
 
-			System.out.println("The distance between zip codes " + senderZipcode + " and" + recipientZipcode + "is "
-					+ distanceBetweenZipcodes + " miles.");
+			System.out.printf("The distance between zip codes %s and %s is %.2f miles.", fromZipCODE, toZipCODE,
+					distanceBetweenZipcodes);
+			if (weight >= 40) {
 
-			return (distanceBetweenZipcodes * SHIPPING_COST + weight);
+				return (weight * .5) + (distanceBetweenZipcodes * SHIPPING_COST_OVER_FORTY);
+			}
+
+			if (weight >= 10 && weight <= 40) {
+
+				return (distanceBetweenZipcodes * SHIPPING_COST_OVER_TEN + weight);
+
+			}
+			return (weight * .5) + (distanceBetweenZipcodes * SHIPPING_COST_UNDER_TEN);
 
 		} // end try
 		catch (InputMismatchException e) {
@@ -430,46 +433,43 @@ public class Methods {
 
 	}
 
-	/* old login method
-	public boolean login() throws Exception {
-		Scanner console = new Scanner(System.in);
-		String login = "";
-		String password = "";
+	public String securePass(String password, String salt) throws FileNotFoundException, IOException {
 
-		System.out.print("\nPlease enter your username: ");
-		EELogin = console.next();
-
-		System.out.print("\nPlease enter your password: ");
-		password = console.next();
-		byte[] salt = getSalt(login);
-		byte[] encodedPassword = getPassword(login);
-
-		byte[] hashed = hash(password.toCharArray(), salt);
-
-		for (int i = 0; i < encodedPassword.length; i++) {
-			if (encodedPassword[i] != hashed[i]) {
-				System.out.println("The username or password is incorrect. Please try again.");// shut off at 5 attempts
-				return false;
-			}
-		}
-
-		return true;
-	}
-	*/
-
-	// converts password and salt to a hash value
-	public static byte[] hash(char[] password, byte[] salt) throws InvalidKeySpecException {
-		PBEKeySpec spec = new PBEKeySpec(password, salt, 10000, 256);
-		Arrays.fill(password, Character.MIN_VALUE);
+		String generatedPassword = "";
+		// System.out.println("Passed to secure: " + salt);
+		// System.out.println("The password: " + password);
 		try {
-			SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-			return skf.generateSecret(spec).getEncoded();
-		} catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-			throw new AssertionError("Error while hashing a password: " + e.getMessage(), e);
-		} finally {
-			spec.clearPassword();
+			MessageDigest md = MessageDigest.getInstance("SHA-256");
+			md.update(salt.getBytes(StandardCharsets.UTF_8));
+			byte[] bytes = md.digest(password.getBytes(StandardCharsets.UTF_8));
+			StringBuilder sb = new StringBuilder();
+			for (int i = 0; i < bytes.length; i++) {
+				sb.append(Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
+			}
+			generatedPassword = sb.toString();
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
 		}
-	}// end has method
+		return generatedPassword;
+	}
+
+	public String generateSalt() {
+		SecureRandom rand = new SecureRandom();
+		String newSalt = "";
+		byte[] salt = new byte[20];
+		rand.nextBytes(salt);
+		// 32 - 126
+		for (int i = 0; i < salt.length; i++) {
+			if (salt[i] > 126) {
+				salt[i] = 126;
+			}
+			if (salt[i] < 32) {
+				salt[i] = 32;
+			}
+			newSalt = newSalt + salt[i];
+		}
+		return newSalt;
+	}
 
 	// Returns Spherical distance in miles given the latitude
 	// and longitude of two points (depends on constant RADIUS)
@@ -509,90 +509,50 @@ public class Methods {
 	// need to retrieve the hashed password from database
 	private String getPassword(String login) throws Exception {
 		String temp;
-		ArrayList<Person> results = new ArrayList<Person>();
-
 		try {
-			Iterable<Document> myDocIterable = collectionEE.find(eq("login", login));
-			myDocIterable.forEach(document -> {
-				try {
-					personObject2 = mapper.readValue(document.toJson(), Person.class);
-				} catch (JsonParseException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (JsonMappingException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				results.add(personObject2);
-			});
+		Document user = (Document) collectionEE.find(eq("login", login)).first();
 
-		} // end try
-		catch (InputMismatchException e) {
-			console.next();
-
-		} // end mismatch catch
-		catch (Exception e) {
-			System.out.println("/n" + e.toString());
-
-		} finally {
-		} // end catch
-		temp = results.get(0).getHash();
+		temp = (String) user.get("hash");
+		}
+		catch(NullPointerException e) {
+			temp = "";
+		}
 		return temp;
 	}// end getPassword()
 
 	private String getSalt(String login) throws Exception {
 		String temp;
-		ArrayList<Person> results = new ArrayList<Person>();
-
 		try {
-			Iterable<Document> myDocIterable = collectionEE.find(eq("login", login));
-			myDocIterable.forEach(document -> {
-				try {
-					personObject = mapper.readValue(document.toJson(), Person.class);
-				} catch (JsonParseException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (JsonMappingException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				results.add(personObject);
-			});
-
-		} // end try
-		catch (InputMismatchException e) {
-			console.next();
-
-		} // end mismatch catch
-		catch (Exception e) {
-			System.out.println("/n" + e.toString());
-
-		} finally {
-		} // end catch
-		temp = results.get(0).getSalt();
+		Document user = (Document) collectionEE.find(eq("login", login)).first();
+		temp = (String) user.get("salt");
+		}
+		catch(NullPointerException e) {
+			temp = "";
+		}
 		return temp;
 	}
-	
-	//checks password and returns a boolean
+
+	// checks password and returns a boolean
 	public boolean checkPassword(String login, String password) throws Exception {
 		boolean pass = false;
 		String salt = getSalt(login);
 		String hash = getPassword(login);
-		String input = Base64.getEncoder().encodeToString(hash(password.toCharArray(), salt.getBytes()));
-		System.out.println(hash);
-		System.out.println(input);
-		if(hash.equals(input)) {
+		String input = securePass(password, salt);
+		// System.out.println(hash);
+		// System.out.println(input);
+		if (hash.equals(input)) {
 			pass = true;
 		}
 		return pass;
 	}
-	
+
+	public boolean checkAdmin(String login) {
+
+		Document user = (Document) collectionEE.find(eq("login", login)).first();
+
+		return (boolean) user.get("admin");
+	}
+
 	public void printLabel(String packageToSearch) {
 		try {
 
@@ -641,7 +601,8 @@ public class Methods {
 	}// end print label
 
 	protected String createTrackingNum(String zip) {
-		// syntax we would like to generate is DIA123456-A1B34
+		// generates a tracking number with 5 digit zip code followed by 10 random
+		// digits
 		String val = zip; // start with reciever zip
 		val += "-";
 
