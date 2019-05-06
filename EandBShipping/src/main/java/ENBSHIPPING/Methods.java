@@ -260,6 +260,17 @@ public class Methods {
 
 			System.out.println("What is the new location of the package?");
 			String newCity = console.next();
+			
+			System.out.println("Would you like to change the status of this package? Y/N");
+			String input  =  console.next();
+			if(input.equalsIgnoreCase("y")) {
+				System.out.println("What is the new status of the package?");
+				String status = console.next();
+				
+				// update the document for new status
+				collectionPackage.updateOne(eq("shippingStatus"),
+						new Document("$set", new Document("shippingStatus", status)));
+			}
 
 			// update the document for previous location
 			collectionPackage.updateOne(eq("previousLocation", previousCity),
