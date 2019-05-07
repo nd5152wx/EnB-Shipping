@@ -140,17 +140,26 @@ public class ShippingClient {
 
 					switch (userCommand) {
 
-					case 1:// Calculate shipping cost
-						System.out.println("What is the sender's 5 digit zip code?");
-						String senderZipCode = console.next();
-						System.out.println("What is the recipient's 5 digit zip code?");
-						String recipientZipCode = console.next();
-						System.out.println("What is the weight of the package in pounds?");
-						double weight = console.nextDouble();
+					case 1:// Employee menu/calculate shipping cost
+                        System.out.println("What is the sender's 5 digit zip code?");
+                        String senderZipCode = console.next();
+                        String resultSender = EB.findCityPerZip(senderZipCode);
+                        System.out.println("\nThe zip code " + senderZipCode + " is for "
+                                + resultSender);
+                        System.out.println("\nWhat is the recipient's 5 digit zip code?");
+                        String recipientZipCode = console.next();
 
-						double cost = EB.calculateShippingCost(senderZipCode, recipientZipCode, weight);
-						System.out.println("\nThe cost of shipping would be: $" + df2.format(cost));
-						break;
+                        //get the city and state of the recipient zip code
+                        String resultRecipient = EB.findCityPerZip(recipientZipCode);
+                        System.out.println("\nThe zip code " + recipientZipCode + " is for "
+                                + resultRecipient);
+                        System.out.println("\nWhat is the weight of the package in pounds?");
+                        double weight = console.nextDouble();
+
+                        double cost = EB.calculateShippingCost(senderZipCode, recipientZipCode, weight);
+                        // System.out.printf("The cost for this package is $%.2D", cost);
+                        System.out.println("\nThe cost of shipping would be: $" + df2.format(cost));
+                        break;
 					case 2:// change the last name of an employee
 						EB.shipNewPackage();
 						break;
@@ -217,17 +226,25 @@ public class ShippingClient {
 					switch (employeeCommand) {
 
 					case 11:// Employee menu/calculate shipping cost
-						System.out.println("What is the sender's 5 digit zip code?");
-						String senderZipCode = console.next();
-						System.out.println("What is the recipient's 5 digit zip code?");
-						String recipientZipCode = console.next();
-						System.out.println("What is the weight of the package in pounds?");
-						double weight = console.nextDouble();
+                        System.out.println("What is the sender's 5 digit zip code?");
+                        String senderZipCode = console.next();
+                        String resultSender = EB.findCityPerZip(senderZipCode);
+                        System.out.println("\nThe zip code " + senderZipCode + " is for "
+                                + resultSender);
+                        System.out.println("\nWhat is the recipient's 5 digit zip code?");
+                        String recipientZipCode = console.next();
 
-						double cost = EB.calculateShippingCost(senderZipCode, recipientZipCode, weight);
-						// System.out.printf("The cost for this package is $%.2D", cost);
-						System.out.println("\nThe cost of shipping would be: $" + df2.format(cost));
-						break;
+                        //get the city and state of the recipient zip code
+                        String resultRecipient = EB.findCityPerZip(recipientZipCode);
+                        System.out.println("\nThe zip code " + recipientZipCode + " is for "
+                                + resultRecipient);
+                        System.out.println("\nWhat is the weight of the package in pounds?");
+                        double weight = console.nextDouble();
+
+                        double cost = EB.calculateShippingCost(senderZipCode, recipientZipCode, weight);
+                        // System.out.printf("The cost for this package is $%.2D", cost);
+                        System.out.println("\nThe cost of shipping would be: $" + df2.format(cost));
+                        break;
 
 					case 12:// Employee menu track package by tracking number
 						EB.trackPackageByTrackingNumber();
@@ -274,18 +291,26 @@ public class ShippingClient {
 
 					switch (userCommand) {
 
-					case 21:// user menu
-						System.out.println("What is the sender's 5 digit zip code?");
-						String senderZipCode = console.next();
-						System.out.println("What is the recipient's 5 digit zip code?");
-						String recipientZipCode = console.next();
-						System.out.println("What is the weight of the package in pounds?");
-						double weight = console.nextDouble();
+					case 21:// Employee menu/calculate shipping cost
+                        System.out.println("What is the sender's 5 digit zip code?");
+                        String senderZipCode = console.next();
+                        String resultSender = EB.findCityPerZip(senderZipCode);
+                        System.out.println("\nThe zip code " + senderZipCode + " is for "
+                                + resultSender);
+                        System.out.println("\nWhat is the recipient's 5 digit zip code?");
+                        String recipientZipCode = console.next();
 
-						double cost = EB.calculateShippingCost(senderZipCode, recipientZipCode, weight);
-						// System.out.printf("The cost for this package is $%.2D", cost);
-						System.out.println("\nThe cost of shipping would be: $" + df2.format(cost));
-						break;
+                        //get the city and state of the recipient zip code
+                        String resultRecipient = EB.findCityPerZip(recipientZipCode);
+                        System.out.println("\nThe zip code " + recipientZipCode + " is for "
+                                + resultRecipient);
+                        System.out.println("\nWhat is the weight of the package in pounds?");
+                        double weight = console.nextDouble();
+
+                        double cost = EB.calculateShippingCost(senderZipCode, recipientZipCode, weight);
+                        // System.out.printf("The cost for this package is $%.2D", cost);
+                        System.out.println("\nThe cost of shipping would be: $" + df2.format(cost));
+                        break;
 
 					case 22:// user menu
 						EB.trackPackageByTrackingNumber();
