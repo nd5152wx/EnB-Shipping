@@ -620,5 +620,35 @@ public class Methods {
 
 		return val;
 	}
+	
+	public String findCityPerZip(String zipCode){
+        try {
+           
+		// This retrieves the entire document that matches the sender's zip code
+		Document searchedZip = (Document) collectionZipCode.find(eq("Zipcode", zipCode)).first();
+		if (searchedZip == null) {
+			System.out.println("I'm sorry, but we do not have that zip code in our system.");
+		}
+                    //get the city and state from the zip code collection 
+		String zipCity = (String) (searchedZip.get("City"));
+		String zipState = (String) (searchedZip.get("State"));
+                    String result = zipCity + "," + zipState; 
+                  
+                    return result; 
+        
+    	} // end try
+	catch (InputMismatchException e) {
+		console.next();
+	} catch (NullPointerException r) {
+		System.out.println("/n" + r.toString());
+	} catch (Exception e) {
+		System.out.println("/n" + e.toString());
+
+	} finally {
+	} // end catch
+
+	return "nowhere that we know of";
+
+}
 
 }// end class
